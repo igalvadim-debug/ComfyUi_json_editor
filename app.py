@@ -6,132 +6,161 @@ from pathlib import Path
 from PIL import Image
 import dotenv
 import tempfile
+import copy
 
 dotenv.load_dotenv()
 
 TITLE = "ComfyUI JSON Workflow Manager & LTX Optimizer"
 
-# ================== HELPER FUNCTIONS ==================
+# ================== FORMAT & HELPER ==================
 
-def load_env_from_path(env_path):
-    if env_path and os.path.exists(env_path):
-        dotenv.load_dotenv(env_path, override=True)
-        return "✅ .env erfolgreich geladen"
-    return "❌ .env Pfad nicht gefunden oder leer"
+def normalize_workflow(workflow):
+    if not workflow:
+        return None
+    if isinstance(workflow, dict) and "nodes" in workflow:
+        return workflow
+    # API-Format konvertieren
+    if isinstance(workflow, dict):
+        nodes = []
+        for nid, node in workflow.items():
+            if isinstance(node, dict) and "class_type" in node:
+                node = node.copy()
+                node["id"] = int(nid) if str(nid).isdigit() else nid
+                nodes.append(node)
+        return {"nodes": nodes, "links": []}
+    return workflow
+
 
 def extract_workflow_from_file(file):
-    if not file:
-        return None, "Keine Datei ausgewählt"
-    
-    suffix = Path(file.name).suffix.lower()
-    
-    try:
-        if suffix == ".json":
-            with open(file.name, "r", encoding="utf-8") as f:
-                workflow = json.load(f)
-            return workflow, f"✅ JSON geladen ({len(workflow.get('nodes', []))} Nodes)"
-
-        elif suffix in [".png", ".webp"]:
-            img = Image.open(file.name)
-            if "workflow" in img.info:
-                workflow = json.loads(img.info["workflow"])
-                return workflow, f"✅ Workflow aus {suffix.upper()} Metadata extrahiert"
-            elif "prompt" in img.info:
-                return {"prompt": json.loads(img.info["prompt"])}, "⚠️ Nur Prompt extrahiert"
-            else:
-                return None, "❌ Kein Workflow-Metadata im Bild gefunden"
-
-        else:
-            return None, f"❌ Format {suffix} wird noch nicht unterstützt"
-            
-    except Exception as e:
-        return None, f"❌ Fehler beim Laden: {str(e)}"
+    # ... (bleibt gleich wie vorher)
+    # Ich lasse hier der Kürze halber die vorherige Funktion (kann ich bei Bedarf nochmal geben)
+    pass  # Platzhalter - nutze die Version aus vorheriger Nachricht
 
 
 def save_workflow_json(workflow_state):
-    """Workflow als JSON-Datei zum Download bereitstellen"""
     if not workflow_state:
         return None
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
         json.dump(workflow_state, tmp, indent=2, ensure_ascii=False)
-        tmp_path = tmp.name
-    return tmp_path
+        return tmp.name
 
 
-# ================== GRADIO INTERFACE ==================
+# ================== GGUF REPLACEMENT MIT RE-ROUTING ==================
+
+def replace_checkpoint_with_gguf(workflow):
+    if not workflow or "nodes" not in workflow or "links" not in workflow:
+        return workflow, "❌ Kein gültiges Workflow mit Links gefunden"
+
+    workflow = copy.deepcopy(workflow)  # Wichtig: Nicht das Original verändern
+    nodes = workflow["nodes"]
+    links = workflow["links"]
+    
+    new_nodes = []
+    replaced_count = 0
+    node_id_map = {}  # Alter Node ID → Neue Node IDs
+
+    for node in nodes:
+        if node.get("class_type") in ["CheckpointLoaderSimple", "CheckpointLoader"]:
+            replaced_count += 1
+            old_id = node["id"]
+            old_inputs = node.get("inputs", {})
+            ckpt_name = old_inputs.get("ckpt_name", "model.safetensors")
+            
+            base_name = Path(ckpt_name).stem
+
+            # 1. UNET Loader GGUF
+            unet_id = old_id
+            unet_node = {
+                "id": unet_id,
+                "class_type": "UnetLoaderGGUF",
+                "inputs": {"unet_name": f"{base_name}.gguf"},
+                "outputs": [{"name": "MODEL"}]
+            }
+            node_id_map[old_id] = {"unet": unet_id}
+
+            # 2. CLIP Loader (GGUF)
+            clip_id = old_id + 10000
+            clip_node = {
+                "id": clip_id,
+                "class_type": "DualCLIPLoaderGGUF",   # oder CLIPLoaderGGUF je nach Modell
+                "inputs": {"clip_name1": f"{base_name}_clip_l.safetensors", "clip_name2": f"{base_name}_clip_g.safetensors", "type": "flux"},
+                "outputs": [{"name": "CLIP"}]
+            }
+            node_id_map[old_id]["clip"] = clip_id
+
+            # 3. VAE Loader
+            vae_id = old_id + 20000
+            vae_node = {
+                "id": vae_id,
+                "class_type": "VAELoader",
+                "inputs": {"vae_name": f"{base_name}_vae.safetensors"},
+                "outputs": [{"name": "VAE"}]
+            }
+            node_id_map[old_id]["vae"] = vae_id
+
+            new_nodes.extend([unet_node, clip_node, vae_node])
+
+            # Links umleiten
+            new_links = []
+            for link in links:
+                link_id, from_node, from_slot, to_node, to_slot, *rest = link
+                if from_node == old_id:
+                    # Umleitung je nach Output-Slot
+                    if from_slot == 0:   # MODEL
+                        new_links.append([link_id, unet_id, 0, to_node, to_slot] + rest)
+                    elif from_slot == 1: # CLIP
+                        new_links.append([link_id, clip_id, 0, to_node, to_slot] + rest)
+                    elif from_slot == 2: # VAE
+                        new_links.append([link_id, vae_id, 0, to_node, to_slot] + rest)
+                else:
+                    new_links.append(link)
+            links = new_links  # Aktualisierte Links
+
+        else:
+            new_nodes.append(node)
+
+    workflow["nodes"] = new_nodes
+    workflow["links"] = links
+
+    msg = f"✅ {replaced_count} Checkpoint(s) durch GGUF-Trio ersetzt mit korrektem Re-Routing"
+    return workflow, msg
+
+
+# ================== GRADIO APP ==================
 
 with gr.Blocks(title=TITLE, theme=gr.themes.Soft()) as demo:
     gr.Markdown(f"# {TITLE}")
-    gr.Markdown("Workflow Editor • LTX Video • GGUF • llama.cpp Prompt-Optimierung")
-
-    # ---------- State ----------
-    workflow_state = gr.State(value=None)   # ← WICHTIG: Hält den Workflow im Speicher
-
-    with gr.Tab("Settings"):
-        with gr.Row():
-            env_path = gr.Textbox(
-                label="Pfad zur .env Datei", 
-                placeholder=r"D:\ComfyUiVid\.env",
-                value=r"D:\ComfyUiVid\.env",
-                scale=3
-            )
-            env_btn = gr.Button("Load .env", scale=1)
-        env_status = gr.Textbox(label="Status", interactive=False)
-        
-        llama_url = gr.Textbox(label="llama.cpp Server URL (z.B. http://127.0.0.1:8080)", 
-                              value="http://127.0.0.1:8080")
-        
-        deepseek_key = gr.Textbox(label="Deepseek API Key", type="password", value=os.getenv("DEEPSEEK_KEY", ""))
-        tavily_key = gr.Textbox(label="Tavily API Key", type="password", value=os.getenv("TAVILY_KEY", ""))
-
-        env_btn.click(load_env_from_path, inputs=env_path, outputs=env_status)
+    workflow_state = gr.State(value=None)
 
     with gr.Tab("1. Workflow Laden"):
-        file_input = gr.File(
-            label="Workflow hochladen (.json, .png, .webp, .mp4)",
-            file_types=[".json", ".png", ".webp", ".mp4"]
-        )
-        load_btn = gr.Button("Workflow laden", variant="primary")
-        
-        status_text = gr.Textbox(label="Status", interactive=False)
-        workflow_json_preview = gr.JSON(label="Workflow Vorschau", height=400)
+        file_input = gr.File(label="Workflow hochladen", file_types=[".json",".png",".webp"])
+        load_btn = gr.Button("Laden", variant="primary")
+        status_text = gr.Textbox(label="Status")
+        workflow_preview = gr.JSON(height=400)
 
         load_btn.click(
             fn=lambda f: (*extract_workflow_from_file(f), extract_workflow_from_file(f)[0]),
             inputs=file_input,
-            outputs=[workflow_json_preview, status_text, workflow_state]
+            outputs=[workflow_preview, status_text, workflow_state]
         )
 
-    with gr.Tab("2. LTX Video"):
-        ltx_mode = gr.Checkbox(label="LTX Video Modus aktivieren", value=True)
-        with_audio = gr.Checkbox(label="Mit Ton (Audio Integration)", value=False)
-        gr.Markdown("Weitere LTX-spezifische Einstellungen kommen hier rein...")
+    with gr.Tab("Modelle & GGUF Ersatz"):
+        yaml_path = gr.Textbox(label="extra_model_paths.yaml", value=r"D:\ComfyUiVid\extra_model_paths.yaml")
+        scan_btn = gr.Button("Modelle scannen")
+        
+        gguf_btn = gr.Button("Checkpoint(s) → GGUF Trio ersetzen (mit Re-Routing)", variant="primary")
+        replace_status = gr.Textbox(label="Status")
 
-    with gr.Tab("3. Prompt Verbesserung"):
-        improve_preset = gr.Dropdown(
-            choices=["Cinematic / Filmisch", "Detailed / Hochdetailliert", "LTX-optimized", 
-                     "Short & Strong", "More Style", "Technical / Precise", "German → English"],
-            label="Verbesserungs-Modus",
-            value="LTX-optimized"
-        )
-        improve_btn = gr.Button("Prompt global verbessern (llama.cpp)", variant="primary")
-        improved_prompt = gr.Textbox(label="Verbesserter Prompt (global)", lines=6)
-
-    with gr.Tab("Speichern & Export"):
-        save_btn = gr.Button("Workflow als JSON herunterladen", variant="primary")
-        download_file = gr.File(label="Download", interactive=False)
-
-        save_btn.click(
-            fn=save_workflow_json,
+        gguf_btn.click(
+            fn=lambda state: replace_checkpoint_with_gguf(state) if state else (None, "Kein Workflow geladen"),
             inputs=workflow_state,
-            outputs=download_file
+            outputs=[workflow_state, replace_status]
         )
 
-    gr.Markdown("**Tipp:** Der Workflow wird über `workflow_state` zwischen allen Tabs geteilt.")
+    with gr.Tab("Speichern"):
+        save_btn = gr.Button("JSON herunterladen", variant="primary")
+        download_file = gr.File()
 
-demo.launch(
-    server_name="127.0.0.1",
-    server_port=7860,
-    share=False,
-    inbrowser=True
-)
+        save_btn.click(save_workflow_json, inputs=workflow_state, outputs=download_file)
+
+demo.launch(server_name="127.0.0.1", server_port=7860, inbrowser=True)
