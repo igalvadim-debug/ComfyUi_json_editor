@@ -2,28 +2,26 @@ import gradio as gr
 import json
 import yaml
 import os
-import requests
 from pathlib import Path
 from PIL import Image
-import io
 import dotenv
+import tempfile
 
-# --- Config ---
-dotenv.load_dotenv()  # wird später über Pfad gesteuert
+dotenv.load_dotenv()
 
-TITLE = "ComfyUI LTX Workflow Manager & Optimizer"
+TITLE = "ComfyUI JSON Workflow Manager & LTX Optimizer"
 
-# =============== HELPER FUNCTIONS ===============
+# ================== HELPER FUNCTIONS ==================
 
 def load_env_from_path(env_path):
     if env_path and os.path.exists(env_path):
-        dotenv.load_dotenv(env_path)
-    return "✅ .env geladen" if env_path else "Keine .env angegeben"
+        dotenv.load_dotenv(env_path, override=True)
+        return "✅ .env erfolgreich geladen"
+    return "❌ .env Pfad nicht gefunden oder leer"
 
 def extract_workflow_from_file(file):
-    """Unterstützt .json, .png, .webp, .mp4"""
-    if file is None:
-        return None, "Keine Datei hochgeladen"
+    if not file:
+        return None, "Keine Datei ausgewählt"
     
     suffix = Path(file.name).suffix.lower()
     
@@ -31,83 +29,109 @@ def extract_workflow_from_file(file):
         if suffix == ".json":
             with open(file.name, "r", encoding="utf-8") as f:
                 workflow = json.load(f)
-            return workflow, "JSON direkt geladen"
-        
+            return workflow, f"✅ JSON geladen ({len(workflow.get('nodes', []))} Nodes)"
+
         elif suffix in [".png", ".webp"]:
             img = Image.open(file.name)
             if "workflow" in img.info:
                 workflow = json.loads(img.info["workflow"])
-                return workflow, f"Workflow aus {suffix.upper()} Metadata extrahiert"
+                return workflow, f"✅ Workflow aus {suffix.upper()} Metadata extrahiert"
             elif "prompt" in img.info:
-                prompt = json.loads(img.info["prompt"])
-                return {"prompt": prompt}, "Nur Prompt extrahiert"
+                return {"prompt": json.loads(img.info["prompt"])}, "⚠️ Nur Prompt extrahiert"
             else:
-                return None, "Kein Workflow-Metadata gefunden"
-        
-        elif suffix in [".mp4"]:
-            # Für MP4 später mit ffprobe oder custom node Metadata erweitern
-            return None, "MP4 Metadata-Extraktion noch nicht implementiert (VideoHelperSuite Style)"
-        
-        return None, f"Nicht unterstütztes Format: {suffix}"
-    
-    except Exception as e:
-        return None, f"Fehler: {str(e)}"
+                return None, "❌ Kein Workflow-Metadata im Bild gefunden"
 
-def get_models_from_yaml(yaml_path):
-    """extra_model_paths.yaml parsen"""
-    try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-        # Vereinfachte Version – du kannst das später erweitern
-        return {"status": "✅ YAML geladen", "paths": data}
+        else:
+            return None, f"❌ Format {suffix} wird noch nicht unterstützt"
+            
     except Exception as e:
-        return {"status": f"Fehler: {e}", "paths": {}}
+        return None, f"❌ Fehler beim Laden: {str(e)}"
 
-# =============== GRADIO APP ===============
+
+def save_workflow_json(workflow_state):
+    """Workflow als JSON-Datei zum Download bereitstellen"""
+    if not workflow_state:
+        return None
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
+        json.dump(workflow_state, tmp, indent=2, ensure_ascii=False)
+        tmp_path = tmp.name
+    return tmp_path
+
+
+# ================== GRADIO INTERFACE ==================
 
 with gr.Blocks(title=TITLE, theme=gr.themes.Soft()) as demo:
     gr.Markdown(f"# {TITLE}")
-    gr.Markdown("Workflow Editor + LTX Optimizer + Prompt Verbesserung (llama.cpp)")
+    gr.Markdown("Workflow Editor • LTX Video • GGUF • llama.cpp Prompt-Optimierung")
+
+    # ---------- State ----------
+    workflow_state = gr.State(value=None)   # ← WICHTIG: Hält den Workflow im Speicher
 
     with gr.Tab("Settings"):
-        env_path = gr.Textbox(label="Pfad zur .env Datei", placeholder="D:\\ComfyUiVid\\.env", value="")
+        with gr.Row():
+            env_path = gr.Textbox(
+                label="Pfad zur .env Datei", 
+                placeholder=r"D:\ComfyUiVid\.env",
+                value=r"D:\ComfyUiVid\.env",
+                scale=3
+            )
+            env_btn = gr.Button("Load .env", scale=1)
         env_status = gr.Textbox(label="Status", interactive=False)
-        env_btn = gr.Button(" .env laden ")
-        env_btn.click(load_env_from_path, inputs=env_path, outputs=env_status)
-
-        llama_url = gr.Textbox(label="llama.cpp Server URL", value="http://127.0.0.1:8080", placeholder="http://127.0.0.1:8080")
+        
+        llama_url = gr.Textbox(label="llama.cpp Server URL (z.B. http://127.0.0.1:8080)", 
+                              value="http://127.0.0.1:8080")
+        
         deepseek_key = gr.Textbox(label="Deepseek API Key", type="password", value=os.getenv("DEEPSEEK_KEY", ""))
         tavily_key = gr.Textbox(label="Tavily API Key", type="password", value=os.getenv("TAVILY_KEY", ""))
 
-    with gr.Tab("Workflow Laden"):
-        file_input = gr.File(label="Workflow hochladen (.json, .png, .webp, .mp4)", file_types=[".json",".png",".webp",".mp4"])
-        load_btn = gr.Button("Workflow laden")
+        env_btn.click(load_env_from_path, inputs=env_path, outputs=env_status)
+
+    with gr.Tab("1. Workflow Laden"):
+        file_input = gr.File(
+            label="Workflow hochladen (.json, .png, .webp, .mp4)",
+            file_types=[".json", ".png", ".webp", ".mp4"]
+        )
+        load_btn = gr.Button("Workflow laden", variant="primary")
+        
         status_text = gr.Textbox(label="Status", interactive=False)
-        workflow_json = gr.JSON(label="Extrahierter Workflow", visible=True)
+        workflow_json_preview = gr.JSON(label="Workflow Vorschau", height=400)
 
         load_btn.click(
-            extract_workflow_from_file,
+            fn=lambda f: (*extract_workflow_from_file(f), extract_workflow_from_file(f)[0]),
             inputs=file_input,
-            outputs=[workflow_json, status_text]
+            outputs=[workflow_json_preview, status_text, workflow_state]
         )
 
-    with gr.Tab("LTX Video"):
-        ltx_checkbox = gr.Checkbox(label="LTX Video Modus", value=True)
-        with_ton = gr.Checkbox(label="Mit Ton", value=False)
-        # Hier kommen später LTX-spezifische Controls
+    with gr.Tab("2. LTX Video"):
+        ltx_mode = gr.Checkbox(label="LTX Video Modus aktivieren", value=True)
+        with_audio = gr.Checkbox(label="Mit Ton (Audio Integration)", value=False)
+        gr.Markdown("Weitere LTX-spezifische Einstellungen kommen hier rein...")
 
-    with gr.Tab("Prompt Verbesserung"):
+    with gr.Tab("3. Prompt Verbesserung"):
         improve_preset = gr.Dropdown(
             choices=["Cinematic / Filmisch", "Detailed / Hochdetailliert", "LTX-optimized", 
                      "Short & Strong", "More Style", "Technical / Precise", "German → English"],
             label="Verbesserungs-Modus",
             value="LTX-optimized"
         )
-        improve_btn = gr.Button("Prompt global verbessern (llama.cpp)")
-        improved_prompt = gr.Textbox(label="Verbesserter Prompt", lines=8)
+        improve_btn = gr.Button("Prompt global verbessern (llama.cpp)", variant="primary")
+        improved_prompt = gr.Textbox(label="Verbesserter Prompt (global)", lines=6)
 
-    # Weitere Tabs: Model Manager, Node List, KI-Hilfe etc. folgen
+    with gr.Tab("Speichern & Export"):
+        save_btn = gr.Button("Workflow als JSON herunterladen", variant="primary")
+        download_file = gr.File(label="Download", interactive=False)
 
-    gr.Markdown("### Nächste Schritte nach diesem Starter:\n- Model Scanner aus extra_model_paths.yaml\n- Node-Erkennung & Dropdowns\n- GGUF Ersatz\n- Deepseek & Tavily Integration")
+        save_btn.click(
+            fn=save_workflow_json,
+            inputs=workflow_state,
+            outputs=download_file
+        )
 
-demo.launch(server_name="127.0.0.1", server_port=7860, share=False)
+    gr.Markdown("**Tipp:** Der Workflow wird über `workflow_state` zwischen allen Tabs geteilt.")
+
+demo.launch(
+    server_name="127.0.0.1",
+    server_port=7860,
+    share=False,
+    inbrowser=True
+)
