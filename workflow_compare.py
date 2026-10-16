@@ -55,14 +55,19 @@ def node_key(node):
 def effective_type(node):
     """Node-Typ mit Rename-Tabelle abgebildet (2.3-Name -> 2.5-Name).
     Typen ausserhalb der Tabelle bleiben unveraendert."""
-    return LTX23_TO_LTX25_NODE_RENAME.get(_node_type(node), _node_type(node))
+    t = _node_type(node)
+    return LTX23_TO_LTX25_NODE_RENAME.get(t, t)
 
 
-def _scalar_fingerprint(node):
+def _scalar_fingerprint(node, schema=None):
     """Geordnete Liste skalarer Parameterwerte - Tiebreak beim Matching
-    gleichartiger Nodes (z.B. mehrere CLIPTextEncode)."""
+    gleichartiger Nodes (z.B. mehrere CLIPTextEncode). 'schema' kann
+    vom Aufrufer vorgegeben werden (gleicher effektiver Typ -> gleiche
+    Schema-Liste), damit die Lookup-Tabelle nicht pro Node neu
+    aufgebaut wird."""
+    if schema is None:
+        schema = NODE_WIDGET_SCHEMA.get(_node_type(node))
     out = []
-    schema = NODE_WIDGET_SCHEMA.get(_node_type(node))
     if schema:
         for key in schema:
             v = get_node_param(node, key, _MISSING)
@@ -119,16 +124,21 @@ def _fmt(v):
 #  Matching
 # ----------------------------------------------------------------------
 
-def _score(a, b):
+def _score(a, b, fa=None, fb=None):
     """Matching-Punktzahl: gleicher Roh-Typ +2, gleicher Titel +2,
-    plus Anzahl uebereinstimmender skalarer Parameter."""
+    plus Anzahl uebereinstimmender skalarer Parameter.
+    Die Fingerprints koennen vom Aufrufer vorgegeben werden
+    (werden in match_nodes ohnehin pro Node benoetigt)."""
     s = 0
     if _node_type(a) == _node_type(b):
         s += 2
     ta, tb = _node_title(a), _node_title(b)
     if ta and ta == tb:
         s += 2
-    fa, fb = _scalar_fingerprint(a), _scalar_fingerprint(b)
+    if fa is None:
+        fa = _scalar_fingerprint(a)
+    if fb is None:
+        fb = _scalar_fingerprint(b)
     s += sum(1 for x in fa if x in fb)
     return s
 
@@ -137,6 +147,13 @@ def match_nodes(nodes_a, nodes_b):
     """Greedy-Matching: fuer jeden Node aus A den besten noch freien
     Kandidaten aus B mit gleichem *effektivem* Typ waehlen (beste
     Punktzahl via _score, deterministisch in A-Reihenfolge).
+
+    Effizienz: Nodes beider Seiten werden vorab in Buckets gleichen
+    effektiven Typs einsortiert - die Suche laeuft dann nur noch über
+    Kandidaten desselben Buckets (statt über alle Nodes von B). Inner-
+    halb eines Buckets sind Typ und Widget-Schema identisch, daher
+    wird jeder Skalar-Fingerprint genau EINMAL berechnet. Komplexitaet
+    damit O(n * k + F) statt O(n^2) mit n * k Fingerprint-Aufbauten.
 
     Typ-Renames aus der config-Tabelle werden dadurch automatisch
     zugeordnet und als 'renamed' gemeldet. Renames AUSSERHALB der
@@ -148,23 +165,40 @@ def match_nodes(nodes_a, nodes_b):
       removed: list[node]              - nur in A
       renamed: list[dict]              - Paare mit Typ-Rename
     """
-    used = [False] * len(nodes_b)
-    matches, removed, renamed = [], [], []
+    # Vorab: Bucket-Zuordnung + je ein Fingerprint pro Node.
+    # 'seq' merkt die urspruengliche Reihenfolge in nodes_b - fuer die
+    # 'added'-Liste am Ende (bleibt damit exakt in B-Reihenfolge).
+    buckets_b = {}          # eff_typ -> [Listeneintrag, ...]
+    for j, b in enumerate(nodes_b):
+        schema_b = NODE_WIDGET_SCHEMA.get(_node_type(b))
+        entry = [b, _scalar_fingerprint(b, schema_b), False, j]
+        buckets_b.setdefault(effective_type(b), []).append(entry)
 
+    # Fingerprints der A-Nodes in Original-Reihenfolge vorraeps berechnen
+    prepared_a = []
     for a in nodes_a:
-        best_j, best_s = None, -1
-        for j, b in enumerate(nodes_b):
-            if used[j] or effective_type(b) != effective_type(a):
+        schema_a = NODE_WIDGET_SCHEMA.get(_node_type(a))
+        prepared_a.append((a, effective_type(a), _scalar_fingerprint(a, schema_a)))
+
+    matches, removed, renamed = [], [], []
+    for a, etype, fa in prepared_a:
+        pool = buckets_b.get(etype)
+        if not pool:
+            removed.append(a)
+            continue
+        best_i, best_s = None, -1
+        for i, entry in enumerate(pool):
+            if entry[2]:
                 continue
-            s = _score(a, b)
+            s = _score(a, entry[0], fa, entry[1])
             if s > best_s:
-                best_s, best_j = s, j
-        if best_j is None:
+                best_s, best_i = s, i
+        if best_i is None:
             removed.append(a)
             continue
 
-        used[best_j] = True
-        b = nodes_b[best_j]
+        pool[best_i][2] = True
+        b = pool[best_i][0]
         if _node_type(a) != _node_type(b):
             renamed.append({
                 "old_node": a,
@@ -175,7 +209,9 @@ def match_nodes(nodes_a, nodes_b):
             })
         matches.append((a, b))
 
-    added = [nodes_b[j] for j in range(len(nodes_b)) if not used[j]]
+    unused = sorted((e for pool in buckets_b.values() for e in pool
+                     if not e[2]), key=lambda e: e[3])
+    added = [e[0] for e in unused]
     return matches, added, removed, renamed
 
 # ----------------------------------------------------------------------

@@ -28,15 +28,79 @@ def load_yaml_paths(yaml_path=YAML_PATH):
         return {}, str(e)
 
 
+# ----------------------------------------------------------------------
+#  Modell-Katalog-Cache
+# ----------------------------------------------------------------------
+# scan_models() liest pro Aufruf den kompletten Ordner-Bestand von der
+# Platte. find_25_equivalent() wird vom Konverter fuer JEDEN betroffenen
+# Dateinamen aufgerufen und war ohne Cache ein Full-Disk-Rescan pro
+# Datei. Gecacht wird pro (Kategorie, Ordnerliste); Gueltigkeit ueber
+# eine leichte "Bestands-Signatur" (Anzahl + groester/mittelster
+# File-Mtime - kein globbing, ~ein stat()-Aufruf pro Datei). Neue oder
+# geloeschte Dateien aendern die Signatur und fuehren beim naechsten
+# Aufruf automatisch zu einem frischen Einlesen.
+_MODEL_SCAN_CACHE = {}      # (category, folders) -> (stamp, [names])
+_LTX_VERSION_CACHE = {}     # (all_folders, stamp) -> result
+
+
+def _folder_stamp(folder):
+    """Leichte Signatur eines Modell-Ordners: Dateianzahl plus groesste
+    Modify-Zeit - ohne globbing und ohne stat()-Aufrufe pro Datei.
+    scandir() liefert die mtime der Eintraege meist gratis aus dem
+    Verzeichnis-Eintrag (Linux/ext4, Windows/NTFS); nur wo das nicht
+    geht, wird punktuell stat() nachgeholt. Neue/geloeschte Dateien
+    aendern Anzahl oder max-Mtime -> Cache-Reload. Ein Austausch einer
+    Datei exakt gleichen Namens an gleicher Stelle ist fuer diese App
+    ungefaehrlich (der Katalog speichert nur Dateinamen)."""
+    try:
+        with os.scandir(folder) as it:
+            entries = list(it)
+        if not entries:
+            return (0, 0.0)
+        mtimes = []
+        for e in entries:
+            try:
+                mt = e.stat(follow_symlinks=False).st_mtime_ns
+            except OSError:
+                continue
+            if mt is None:
+                try:
+                    mt = os.stat(e.path).st_mtime_ns
+                except OSError:
+                    continue
+            mtimes.append(mt)
+        return (len(entries), max(mtimes) if mtimes else 0)
+    except OSError:
+        return (0, 0.0)
+
+
+def invalidate_model_cache():
+    """Setzt den Modell-Katalog-Cache zurueck (z.B. nach dem Anlegen
+    neuer Modell-Ordner oder in Tests)."""
+    _MODEL_SCAN_CACHE.clear()
+    _LTX_VERSION_CACHE.clear()
+
+
 def scan_models(category, yaml_paths):
-    """Listet alle Modell-Dateien einer Kategorie (nur Dateinamen)."""
+    """Listet alle Modell-Dateien einer Kategorie (nur Dateinamen).
+    Ergebnis ist gecacht; Aenderungen an den Ordnern werden ueber die
+    Ordner-mtime erkannt und fuehren zu einem frischen Einlesen."""
     exts = MODEL_EXTENSIONS.get(category, [".safetensors", ".gguf", ".bin", ".pt"])
-    found = []
-    for folder in yaml_paths.get(category, []):
-        p = Path(folder)
-        if p.exists():
-            for ext in exts:
-                found += [f.name for f in p.glob(f"*{ext}")]
+    folders = tuple(yaml_paths.get(category, []))
+    key = (category, folders)
+    stamp = tuple(_folder_stamp(f) for f in folders)
+    cached = _MODEL_SCAN_CACHE.get(key)
+    if cached is not None and cached[0] == stamp:
+        found = list(cached[1])
+    else:
+        found = []
+        for folder in folders:
+            p = Path(folder)
+            if p.exists():
+                for ext in exts:
+                    found += [f.name for f in p.glob(f"*{ext}")]
+        _MODEL_SCAN_CACHE[key] = (stamp, sorted(set(found)))
+        found = list(_MODEL_SCAN_CACHE[key][1])
     return sorted(set(found)) if found else ["(keine Modelle gefunden)"]
 
 
@@ -60,7 +124,20 @@ def scan_ltx_models_by_version(yaml_paths):
     """Durchsucht ALLE Modell-Kategorien nach LTX-Dateien und
     gruppiert sie nach Version: {'2.3': [...], '2.5': [...], '19B': [...]}.
     Die Versions-Schluessel werden dynamisch aus LTX_VERSION_HINTS
-    uebernommen, damit neue Versionen nicht zu einem KeyError fuehren."""
+    uebernommen, damit neue Versionen nicht zu einem KeyError fuehren.
+    Das Gruppierungsergebnis wird zusaetzlich gecacht (der teure Teil
+    ist das Durchsuchen aller Kategorien - hier ein Dict-Lookup statt
+    9x Ordner-Scan bei jedem Aufruf)."""
+    # Cache-Key: alle relevanten Ordner + deren Stamps (ueber den
+    # Kategorie-Cache von scan_models cheap abgeleitet)
+    all_folders = tuple(sorted({f for cat in MODEL_EXTENSIONS
+                                for f in yaml_paths.get(cat, [])}))
+    stamp = tuple(_folder_stamp(f) for f in all_folders)
+    ckey = (all_folders, stamp)
+    cached = _LTX_VERSION_CACHE.get(ckey)
+    if cached is not None:
+        return {v: list(names) for v, names in cached.items()}
+
     result = {version: [] for version in LTX_VERSION_HINTS}
     seen = set()
     for category in MODEL_EXTENSIONS:
@@ -74,7 +151,12 @@ def scan_ltx_models_by_version(yaml_paths):
                 result[v].append(name)
     for version in result:
         result[version] = sorted(result[version])
-    return result
+    # Nur einen Eintrag pro Ordner-Kombination halten (Stamp-Aenderungen
+    # erzeugen neue Keys - altes Limit: die letzten 8 Katalog-Staende).
+    if len(_LTX_VERSION_CACHE) >= 8:
+        _LTX_VERSION_CACHE.clear()
+    _LTX_VERSION_CACHE[ckey] = result
+    return {v: list(names) for v, names in result.items()}
 
 
 # Schluesselwoerter, die eine Datei-Kategorie erkennen lassen -

@@ -3,9 +3,33 @@
 # Node-Parameter in BEIDEN ComfyUI-Formaten.
 
 import pandas as pd
-from config import LTX_NODE_TYPES, NODE_WIDGET_SCHEMA, LTX_VERSION_HINTS
+from config import (
+    LTX_NODE_TYPES, NODE_WIDGET_SCHEMA, LTX_VERSION_HINTS,
+    LTX23_TO_LTX25_NODE_RENAME,
+)
 
 EMPTY_DF = pd.DataFrame(columns=["ID", "Titel", "Class Type", "Wichtige Inputs"])
+
+# Vorbereitete Version hints: Kleinbuchstaben + vorgegeben
+# Reihenfolge (dict-Reihenfolge von LTX_VERSION_HINTS bleibt
+# erhalten - 'in'-Tests funktionieren identisch zum Original).
+_VERSION_HINTS_LOWER = {
+    version: tuple(h.lower() for h in hints)
+    for version, hints in LTX_VERSION_HINTS.items()
+}
+# Node-Typen, die es nur in 2.5 gibt (fuer Versions-Erkennung)
+_LTX25_NODE_TYPES = frozenset(LTX23_TO_LTX25_NODE_RENAME.values())
+# Prompt-Node-Typen als Set statt Tuple (O(1)-Mitgliedschaftstest)
+_PROMPT_NODE_TYPES = frozenset((
+    "CLIPTextEncode", "CLIPTextEncodeSDXL", "smZ CLIPTextEncode",
+    "PrimitiveStringMultiline",
+))
+# Vorab berechnete Index-Zugriffe aufs Widget-Schema
+# (ersetzt das lineare schema.index(name) in heissen Schleifen).
+_SCHEMA_INDEX = {
+    ctype: {name: i for i, name in enumerate(schema)}
+    for ctype, schema in NODE_WIDGET_SCHEMA.items()
+}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -33,9 +57,8 @@ def get_node_param(node, name, default=None):
 
     # Workflow-Format: Wert steckt in widgets_values
     if "widgets_values" in node:
-        schema = NODE_WIDGET_SCHEMA.get(_node_type(node))
-        if schema and name in schema:
-            idx = schema.index(name)
+        idx = _SCHEMA_INDEX.get(_node_type(node), {}).get(name)
+        if idx is not None:
             wv = node.get("widgets_values") or []
             if isinstance(wv, dict):
                 # Neuere ComfyUI-Saves: widgets_values ist ein benanntes
@@ -62,9 +85,8 @@ def set_node_param(node, name, value):
         return node
 
     if "widgets_values" in node:
-        schema = NODE_WIDGET_SCHEMA.get(_node_type(node))
-        if schema and name in schema:
-            idx = schema.index(name)
+        idx = _SCHEMA_INDEX.get(_node_type(node), {}).get(name)
+        if idx is not None:
             wv = node.get("widgets_values")
             if isinstance(wv, dict):
                 # benanntes Dict (neuere Saves) - direkt per Name schreiben
@@ -130,8 +152,7 @@ def analyze_workflow(workflow):
         important_str = " | ".join(important[:5])
 
         # Prompt-Nodes einsammeln
-        if ctype in ("CLIPTextEncode", "CLIPTextEncodeSDXL", "smZ CLIPTextEncode",
-                     "PrimitiveStringMultiline"):
+        if ctype in _PROMPT_NODE_TYPES:
             text = get_node_param(node, "text") or get_node_param(node, "value")
             if isinstance(text, str) and text.strip():
                 prompts.append({"node_id": nid, "class_type": ctype, "title": title, "text": text})
@@ -184,8 +205,7 @@ def detect_ltx_version(workflow):
     for node in workflow["nodes"]:
         ctype = _node_type(node)
         # Node-Typ-Hinweise (z.B. VAEDecodeTiled existiert nur in 2.5)
-        from config import LTX23_TO_LTX25_NODE_RENAME
-        if ctype in LTX23_TO_LTX25_NODE_RENAME.values():
+        if ctype in _LTX25_NODE_TYPES:
             found.add("2.5")
 
         # Dateinamen in widgets_values/inputs durchsuchen
@@ -199,7 +219,10 @@ def detect_ltx_version(workflow):
 
         for text in candidates:
             low = text.lower()
-            for version, hints in LTX_VERSION_HINTS.items():
+            # Kurzer Vorabtest: ohne 'ltx' im Text kann kein Hint matchen.
+            if "ltx" not in low:
+                continue
+            for version, hints in _VERSION_HINTS_LOWER.items():
                 if any(h in low for h in hints):
                     found.add(version)
 
