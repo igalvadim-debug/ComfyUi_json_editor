@@ -330,7 +330,7 @@ def build_full_report(workflow, user_text, vram_gb, ltx_version, ram_gb=None):
         sections.append(
             "=== Erkannte Fehlermuster ===\nKein bekanntes Muster in deinem Text gefunden - "
             "entweder ein selteneres Problem, oder es ist gar keine Fehlermeldung (z.B. nur "
-            "eine Beschreibung in eigenen Worten). Fuer eine Einordnung ggf. Agnes-Zweitmeinung nutzen."
+            "eine Beschreibung in eigenen Worten). Fuer eine Einordnung ggf. minimax-H3-Zweitmeinung nutzen."
         )
 
     struct_issues = analyze_workflow_structure(workflow, vram_gb)
@@ -347,13 +347,15 @@ def build_full_report(workflow, user_text, vram_gb, ltx_version, ram_gb=None):
     return "\n\n".join(sections)
 
 
-def build_agnes_context(workflow, user_text, vram_gb, ltx_version, rule_based_report):
-    """Kontext fuer eine Agnes-Zweitmeinung - der bereits erstellte
-    regelbasierte Report wird mitgegeben, damit Agnes nicht bei Null anfaengt."""
+def build_minimax_context(workflow, user_text, vram_gb, ltx_version, rule_based_report):
+    """Kontext fuer eine minimax-H3-Zweitmeinung - der bereits erstellte
+    regelbasierte Report wird mitgegeben, damit das minimax-Modell nicht
+    bei Null anfaengt."""
     nodes = _all_nodes(workflow) if workflow else []
     types = sorted(set(_node_type(n) for n in nodes))
     lines = [
-        f"ComfyUI-Workflow mit {len(nodes)} Nodes (Top-Level + Subgraphs), erkannte LTX-Version: {ltx_version}.",
+        f"ComfyUI-Workflow (minimax H3) mit {len(nodes)} Nodes (Top-Level + Subgraphs), "
+        f"erkannte LTX-Version: {ltx_version}.",
         f"Ziel-Hardware: {vram_gb} GB VRAM.",
         "Node-Typen: " + ", ".join(types[:60]),
         "",
@@ -364,3 +366,7 @@ def build_agnes_context(workflow, user_text, vram_gb, ltx_version, rule_based_re
         rule_based_report,
     ]
     return "\n".join(lines)
+
+
+# Abwaerts-Kompatibilitaet (alter Name)
+build_agnes_context = build_minimax_context

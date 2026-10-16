@@ -4,7 +4,7 @@
 #
 # Prinzip: Regelbasiert (schnell, kostenlos, deterministisch).
 # Nur wenn etwas nicht eindeutig zuordenbar ist, wird das im
-# Report vermerkt - eine LLM-Zweitmeinung (Agnes) kann optional
+# Report vermerkt - eine LLM-Zweitmeinung (minimax H3) kann optional
 # in llm_analysis.py dazu befragt werden, AUTOMATISCH aendert die
 # KI dabei nichts am Workflow (Sicherheit / Nachvollziehbarkeit).
 
@@ -239,7 +239,7 @@ def convert_workflow_2_3_to_2_5(workflow, yaml_paths=None):
 
 def build_llm_context(workflow, report):
     """Baut eine kompakte Textzusammenfassung fuer eine optionale
-    LLM-Zweitmeinung (Agnes) - z.B. bei unklaren/manuellen Punkten."""
+    LLM-Zweitmeinung (minimax H3) - z.B. bei unklaren/manuellen Punkten."""
     nodes = workflow.get("nodes", []) if workflow else []
     types = sorted(set(_node_type(n) for n in nodes))
     lines = [

@@ -1,7 +1,14 @@
 # ui.py - komplette Gradio-Oberflaeche.
 # Enthaelt KEINE Geschaeftslogik - ruft nur Funktionen aus
 # workflow_io / workflow_analysis / converter_ltx25 / transformers /
-# llm_analysis / model_manager / workflow_modify / diagnostics auf.
+# llm_analysis / model_manager / workflow_modify / diagnostics /
+# md_whitelist auf.
+#
+# MD-Pflicht: Die App arbeitet ausschliesslich mit minimax H3
+# Workflows und nur mit den Modellen/Nodes aus der MD-Sammlung
+# (https://github.com/igalvadim-debug/ComfyUi_json_editor/tree/main/MD).
+# Jeder Load-Vorgang laeuft durch md_whitelist.check_workflow();
+# nicht freigegebene Workflows werden zurueckgewiesen.
 #
 # Aufbau: zwei parallele, komplett unabhaengige "Spuren" A und B
 # (zwei Workflows gleichzeitig geladen & bearbeitbar), in jedem
@@ -11,16 +18,17 @@ import os
 import gradio as gr
 import pandas as pd
 
-from config import TITLE, YAML_PATH, PROMPT_PRESETS, LOCAL_LLM_DEFAULT_URL, GPU_VRAM_PRESETS
+from config import TITLE, YAML_PATH, PROMPT_PRESETS, GPU_VRAM_PRESETS
 
 from model_manager import load_yaml_paths, get_all_model_lists, scan_ltx_models_by_version
 from workflow_io import load_workflow_file, save_as_json, save_as_png_with_workflow
 from workflow_analysis import analyze_workflow, get_prompt_texts, detect_ltx_version
 from converter_ltx25 import convert_workflow_2_3_to_2_5, build_llm_context
 from transformers import replace_checkpoint_with_gguf, apply_ltx_settings, apply_improved_prompt_to_workflow
-from llm_analysis import improve_prompt, suggest_conversion_advice, search_workflows_tavily, call_agnes_chat
+from llm_analysis import improve_prompt, suggest_conversion_advice, search_workflows_tavily, md_models_status
 from workflow_modify import detect_blocks, apply_mods, verify_modification, count_deactivated
-from diagnostics import build_full_report, build_agnes_context
+from diagnostics import build_full_report, build_minimax_context
+from md_whitelist import check_workflow, load_md_lists, describe_format, call_minimax_chat, MD_REPO_URL
 
 _yaml_paths, _yaml_error = load_yaml_paths()
 _model_catalog = get_all_model_lists(_yaml_paths)
@@ -29,8 +37,37 @@ _empty_df = pd.DataFrame(columns=["ID", "Titel", "Class Type", "Wichtige Inputs"
 EXAMPLE_DIR = os.path.join(os.path.dirname(__file__), "example_workflows")
 
 
+_md_lists = load_md_lists()
+
+
+def _md_filter_models(category, choices):
+    """Model-Auswahl auf MD/models.txt beschraenken (Whitelist).
+
+    Ohne Eintraege in models.txt gibt es KEINE Modell-Auswahl
+    ('(keine Modelle)'-Platzhalter) - nichts wird aus anderen Quellen
+    'geraten'. Lokale Pfade werden gegen den reinen Dateinamen
+    gematcht.
+    """
+    entries = _md_lists["models"]
+    if not entries:
+        return ["(keine Modelle - MD/models.txt ist leer)"]
+    import re as _re
+
+    def _norm(s):
+        return _re.sub(r"[\s_\-.]+", "", str(s)).lower()
+
+    allowed_norm = {_norm(e) for e in entries}
+    allowed_base = {_norm(str(e).replace("\\", "/").split("/")[-1]) for e in entries}
+    out = []
+    for c in choices:
+        base = _norm(str(c).replace("\\", "/").split("/")[-1])
+        if _norm(c) in allowed_norm or base in allowed_base:
+            out.append(c)
+    return out or ["(kein lokales Modell in MD/models.txt freigegeben)"]
+
+
 def _make_choices(category):
-    return _model_catalog.get(category, ["(keine Modelle)"])
+    return _md_filter_models(category, _model_catalog.get(category, ["(keine Modelle)"]))
 
 
 def _list_example_workflows():
@@ -51,14 +88,14 @@ _example_files = _list_example_workflows()
 # ═══════════════════════════════════════════════════════════════
 
 def _build_load_track(label, wf_state, wf_orig):
-    gr.Markdown(f"### Workflow {label}")
+    gr.Markdown(f"### Workflow {label} (minimax H3 + MD-Freigabe noetig)")
     file_input = gr.File(label="JSON / PNG / WebP / MP4",
                           file_types=[".json", ".png", ".webp", ".mp4"])
     example_dd = gr.Dropdown(choices=_example_files, label="...oder Beispiel-Workflow waehlen")
     with gr.Row():
         load_btn = gr.Button(f"Laden {label}", variant="primary")
         reset_btn = gr.Button("Zuruecksetzen")
-    status_lbl = gr.Textbox(label="Status", interactive=False)
+    status_lbl = gr.Textbox(label="Status (inkl. MD-Pruefung)", lines=8, interactive=False)
     version_lbl = gr.Textbox(label="Erkannte LTX-Version", interactive=False)
     node_summary = gr.Textbox(label="Uebersicht", interactive=False)
     node_table = gr.Dataframe(value=_empty_df, label="Node-Liste", interactive=False, wrap=True)
@@ -66,7 +103,10 @@ def _build_load_track(label, wf_state, wf_orig):
 
     def on_load(file, example_path):
         src = file if file is not None else example_path
-        wf, msg = load_workflow_file(src)
+        wf, msg = load_workflow_file(src)   # MD-Pruefung ist hier schon integriert
+        if wf is None:
+            empty = pd.DataFrame(columns=["ID", "Titel", "Class Type", "Wichtige Inputs"])
+            return None, None, msg, "-", "Kein Workflow geladen (MD-Abweisung).", empty, ""
         summary, df, _ = analyze_workflow(wf)
         prompts = get_prompt_texts(wf)
         version = detect_ltx_version(wf)
@@ -96,8 +136,8 @@ def _build_convert_track(label, wf_state):
     convert_btn = gr.Button(f"Konvertieren {label}", variant="primary")
     report_box = gr.Textbox(label="Konvertierungs-Report", lines=12, interactive=False)
     with gr.Row():
-        agnes_btn = gr.Button("Agnes-Zweitmeinung einholen")
-    agnes_box = gr.Textbox(label="Agnes-Empfehlung (nur Hinweise, aendert nichts automatisch)",
+        mm_btn = gr.Button("minimax-H3-Zweitmeinung einholen")
+    mm_box = gr.Textbox(label="minimax-H3-Empfehlung (nur Hinweise, aendert nichts automatisch)",
                             lines=10, interactive=False)
 
     def on_convert(wf):
@@ -106,13 +146,13 @@ def _build_convert_track(label, wf_state):
 
     convert_btn.click(on_convert, inputs=[wf_state], outputs=[wf_state, report_box])
 
-    def on_agnes(wf, report_text):
+    def on_minimax(wf, report_text):
         if not report_text.strip():
             return "Bitte zuerst 'Konvertieren' ausfuehren."
         context = build_llm_context(wf, report_text.split("\n"))
         return suggest_conversion_advice(context)
 
-    agnes_btn.click(on_agnes, inputs=[wf_state, report_box], outputs=[agnes_box])
+    mm_btn.click(on_minimax, inputs=[wf_state, report_box], outputs=[mm_box])
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -120,7 +160,8 @@ def _build_convert_track(label, wf_state):
 # ═══════════════════════════════════════════════════════════════
 
 def _build_model_track(label, wf_state):
-    gr.Markdown(f"### Modelle {label}")
+    gr.Markdown(f"### Modelle {label} "
+                "(Dropdowns gefiltert auf MD/models.txt - nur freigegebene Modelle)")
     ckpt_dd = gr.Dropdown(
         choices=_make_choices("checkpoints") + _make_choices("unet") + _make_choices("diffusion_models"),
         label="Checkpoint / UNET", interactive=True)
@@ -168,13 +209,16 @@ def _build_ltx_track(label, wf_state):
 
 
 # ═══════════════════════════════════════════════════════════════
-#  Tab 5: Prompt-Verbesserung (lokal ODER Agnes)
+#  Tab 5: Prompt-Verbesserung (minimax H3, MD-models only)
 # ═══════════════════════════════════════════════════════════════
 
 def _build_prompt_track(label, wf_state):
-    gr.Markdown(f"### Prompt-Verbesserung {label}")
-    mode_radio = gr.Radio(choices=["local", "agnes"], value="local", label="LLM-Quelle")
-    llama_url = gr.Textbox(value=LOCAL_LLM_DEFAULT_URL, label="Lokale Server-URL (nur bei 'local')")
+    gr.Markdown(f"### Prompt-Verbesserung {label} "
+                "(minimax H3 - Modellzwang aus MD/models.txt)")
+    allowed, status = md_models_status()
+    model_dd = gr.Dropdown(choices=allowed or ["(keine MD-Modelle freigegeben)"],
+                            value=(allowed[0] if allowed else None),
+                            label="minimax-H3-Modell (nur MD/models.txt)", interactive=True)
     preset_dd = gr.Dropdown(choices=list(PROMPT_PRESETS.keys()), value="LTX-optimiert", label="Preset")
     prompt_in = gr.Textbox(label="Original Prompt", lines=6)
     load_prompt_btn = gr.Button("Aus Workflow laden (Positive)")
@@ -189,8 +233,24 @@ def _build_prompt_track(label, wf_state):
         from workflow_analysis import get_first_positive_prompt
         return get_first_positive_prompt(wf)
 
+    def on_improve(prompt_text, preset_name, model_choice):
+        # Nur MD-freigegebene Modelle akzeptieren; sonst klare Absage.
+        if not allowed:
+            return prompt_text, status
+        from md_whitelist import call_minimax_chat, default_api_model
+        from config import PROMPT_PRESETS as _PP
+        sys_prompt = _PP.get(preset_name, list(_PP.values())[0])
+        model = model_choice if (allowed and model_choice in allowed) else default_api_model()
+        result, call_status = call_minimax_chat([
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": prompt_text},
+        ], model=model)
+        if result is None:
+            return prompt_text, call_status
+        return result, f"Verbessert mit minimax H3 ({model}) | {call_status}"
+
     load_prompt_btn.click(load_pos, inputs=[wf_state], outputs=[prompt_in])
-    improve_btn.click(improve_prompt, inputs=[prompt_in, preset_dd, mode_radio, llama_url],
+    improve_btn.click(on_improve, inputs=[prompt_in, preset_dd, model_dd],
                        outputs=[prompt_out, improve_status])
     apply_pos_btn.click(lambda wf, t: apply_improved_prompt_to_workflow(wf, t, "positive"),
                          inputs=[wf_state, prompt_out], outputs=[wf_state, improve_status])
@@ -294,8 +354,8 @@ def _build_diagnostics_track(label, wf_state):
     analyze_btn = gr.Button(f"Analysieren {label}", variant="primary")
     report_out = gr.Textbox(label="Diagnose & Empfehlungen", lines=22, interactive=False)
     with gr.Row():
-        agnes_btn = gr.Button("Agnes-Zweitmeinung (fuer unklare Faelle)")
-    agnes_out = gr.Textbox(label="Agnes-Einschaetzung", lines=10, interactive=False)
+        mm_btn2 = gr.Button("minimax-H3-Zweitmeinung (fuer unklare Faelle)")
+    mm_out2 = gr.Textbox(label="minimax-H3-Einschaetzung", lines=10, interactive=False)
 
     def on_gpu_change(gpu_name):
         return GPU_VRAM_PRESETS.get(gpu_name, 8)
@@ -309,24 +369,25 @@ def _build_diagnostics_track(label, wf_state):
     analyze_btn.click(on_analyze, inputs=[wf_state, error_text, vram_num, ram_num, ltx_version_dd],
                        outputs=[report_out])
 
-    def on_agnes(wf, text, vram_gb, ltx_version, rule_report):
+    def on_minimax(wf, text, vram_gb, ltx_version, rule_report):
         if not rule_report.strip():
             return "Bitte zuerst 'Analysieren' ausfuehren."
-        context = build_agnes_context(wf, text or "", int(vram_gb or 8), ltx_version, rule_report)
+        context = build_minimax_context(wf, text or "", int(vram_gb or 8), ltx_version, rule_report)
         messages = [
             {"role": "system", "content": (
-                "You are an expert ComfyUI/LTX-Video troubleshooter. Given a workflow summary, "
+                "You are an expert ComfyUI/minimax-H3-Video troubleshooter. Given a workflow summary, "
                 "an error description, and an already-generated rule-based report, add anything "
                 "the rules likely missed - especially subtle version-mismatch or VRAM issues. "
+                "Only suggest models and nodes that appear in the user's MD whitelist lists. "
                 "Be concise and concrete. Answer in German."
             )},
             {"role": "user", "content": context},
         ]
-        result, status = call_agnes_chat(messages, max_tokens=700)
+        result, status = call_minimax_chat(messages, max_tokens=700)
         return result if result is not None else status
 
-    agnes_btn.click(on_agnes, inputs=[wf_state, error_text, vram_num, ltx_version_dd, report_out],
-                    outputs=[agnes_out])
+    mm_btn2.click(on_minimax, inputs=[wf_state, error_text, vram_num, ltx_version_dd, report_out],
+                    outputs=[mm_out2])
 
 
 # ═══════════════════════════════════════════════════════════════
