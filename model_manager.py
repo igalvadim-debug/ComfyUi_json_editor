@@ -44,14 +44,14 @@ _LTX_VERSION_CACHE = {}     # (all_folders, stamp) -> result
 
 
 def _folder_stamp(folder):
-    """Leichte Signatur eines Modell-Ordners: Dateianzahl plus groesste
-    Modify-Zeit - ohne globbing und ohne stat()-Aufrufe pro Datei.
-    scandir() liefert die mtime der Eintraege meist gratis aus dem
-    Verzeichnis-Eintrag (Linux/ext4, Windows/NTFS); nur wo das nicht
-    geht, wird punktuell stat() nachgeholt. Neue/geloeschte Dateien
-    aendern Anzahl oder max-Mtime -> Cache-Reload. Ein Austausch einer
-    Datei exakt gleichen Namens an gleicher Stelle ist fuer diese App
-    ungefaehrlich (der Katalog speichert nur Dateinamen)."""
+    """Return (entry_count, max_mtime_ns) for a folder's immediate entries.
+
+    Count directories and symlinks too. Skip timestamps that raise OSError,
+    using zero if none are readable. Empty folders or directory-scan
+    OSError produce (0, 0.0). Changes preserving both values can be missed.
+
+    Currently raises NameError because this module does not import os.
+    """
     try:
         with os.scandir(folder) as it:
             entries = list(it)
@@ -82,9 +82,17 @@ def invalidate_model_cache():
 
 
 def scan_models(category, yaml_paths):
-    """Listet alle Modell-Dateien einer Kategorie (nur Dateinamen).
-    Ergebnis ist gecacht; Aenderungen an den Ordnern werden ueber die
-    Ordner-mtime erkannt und fuehren zu einem frischen Einlesen."""
+    """Return sorted, unique matching basenames from a category's folders.
+
+    yaml_paths maps categories to folder lists. Match immediate children
+    using MODEL_EXTENSIONS, or .safetensors/.gguf/.bin/.pt for unknown
+    categories. Return ["(keine Modelle gefunden)"] when nothing matches.
+    Cache names until folder entry counts or maximum entry mtimes change;
+    changes preserving both can leave stale results.
+
+    NameError from _folder_stamp propagates when any folder is configured,
+    because this module does not import os.
+    """
     exts = MODEL_EXTENSIONS.get(category, [".safetensors", ".gguf", ".bin", ".pt"])
     folders = tuple(yaml_paths.get(category, []))
     key = (category, folders)
@@ -121,13 +129,17 @@ def _version_of_filename(filename):
 
 
 def scan_ltx_models_by_version(yaml_paths):
-    """Durchsucht ALLE Modell-Kategorien nach LTX-Dateien und
-    gruppiert sie nach Version: {'2.3': [...], '2.5': [...], '19B': [...]}.
-    Die Versions-Schluessel werden dynamisch aus LTX_VERSION_HINTS
-    uebernommen, damit neue Versionen nicht zu einem KeyError fuehren.
-    Das Gruppierungsergebnis wird zusaetzlich gecacht (der teure Teil
-    ist das Durchsuchen aller Kategorien - hier ein Dict-Lookup statt
-    9x Ordner-Scan bei jedem Aufruf)."""
+    """Return sorted, deduplicated LTX basenames grouped by version.
+
+    Scan MODEL_EXTENSIONS categories using yaml_paths' folder lists.
+    Include every LTX_VERSION_HINTS key, even when its list is empty.
+    Reuse cached groups for the same combined folder set and stamps;
+    return independent copies of the lists. Changes to category assignments
+    alone do not invalidate the cached grouping.
+
+    NameError from _folder_stamp propagates when any relevant folder is
+    configured, because this module does not import os.
+    """
     # Cache-Key: alle relevanten Ordner + deren Stamps (ueber den
     # Kategorie-Cache von scan_models cheap abgeleitet)
     all_folders = tuple(sorted({f for cat in MODEL_EXTENSIONS

@@ -42,10 +42,15 @@ def _node_type(node):
 
 
 def get_node_param(node, name, default=None):
-    """Liest einen benannten Parameter aus einem Node, egal ob er
-    im API-Format (inputs-Dict mit direktem Wert) oder im
-    Workflow-Format (widgets_values, positionsbasiert ueber
-    NODE_WIDGET_SCHEMA) gespeichert ist."""
+    """Read a parameter from direct inputs or schema-defined widgets.
+
+    A direct inputs value takes precedence unless it is a two-item list,
+    which is treated as a connection. Widget lookup requires a known
+    parameter in the node type's schema and supports positional lists,
+    named dictionaries, and digit-keyed dictionaries using string indices.
+    Return default when no value is found; a missing slot in a nonempty
+    digit-keyed dictionary returns None.
+    """
     inputs = node.get("inputs")
 
     # API-Format: inputs ist ein Dict mit direkten Werten
@@ -77,8 +82,13 @@ def get_node_param(node, name, default=None):
 
 
 def set_node_param(node, name, value):
-    """Schreibt einen benannten Parameter zurueck in den Node
-    (in-place). Funktioniert fuer beide Formate."""
+    """Set a parameter in place and return the same node.
+
+    Update an existing inputs entry first, even if it holds a connection.
+    Otherwise, write schema-defined parameters when widgets_values exists:
+    use a dictionary key or initialize/extend a list with None as needed.
+    Fall back to creating an inputs entry, replacing non-dictionary inputs.
+    """
     inputs = node.get("inputs")
     if isinstance(inputs, dict) and name in inputs:
         inputs[name] = value
@@ -123,7 +133,15 @@ def find_max_id(nodes):
 # ═══════════════════════════════════════════════════════════════
 
 def analyze_workflow(workflow):
-    """Gibt (summary_str, DataFrame, prompts_list) zurueck."""
+    """Return a node summary, overview DataFrame, and prompt records.
+
+    Expect a workflow with a nodes list. Summarize the node count and any
+    LTX or prompt counts. Overview rows contain ID, Titel, Class Type, and
+    Wichtige Inputs (up to five scalar parameters). Prompt records contain
+    node_id, class_type, title, and nonblank text from recognized prompt
+    node types. A falsey workflow or one without nodes returns
+    "Kein Workflow geladen.", an empty overview, and an empty prompt list.
+    """
     if not workflow or "nodes" not in workflow:
         return "Kein Workflow geladen.", EMPTY_DF.copy(), []
 
@@ -196,8 +214,15 @@ def get_first_positive_prompt(workflow):
 # ═══════════════════════════════════════════════════════════════
 
 def detect_ltx_version(workflow):
-    """Untersucht Node-Typen und referenzierte Modell-Dateinamen und
-    liefert '2.3', '2.5', 'gemischt' oder 'unbekannt'."""
+    """Infer the LTX version from node types and string parameter values.
+
+    Inspect string items in list widgets_values and dictionary inputs;
+    match version hints case-insensitively in strings containing "ltx".
+    Targets of configured node renames also count as 2.5 evidence.
+    Return "2.3" or "2.5" for evidence of only that version, "gemischt"
+    for multiple versions (including 19B), and "unbekannt" otherwise.
+    A falsey workflow, missing nodes, or only 19B evidence is "unbekannt".
+    """
     if not workflow or "nodes" not in workflow:
         return "unbekannt"
 
