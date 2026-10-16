@@ -60,11 +60,14 @@ def effective_type(node):
 
 
 def _scalar_fingerprint(node, schema=None):
-    """Geordnete Liste skalarer Parameterwerte - Tiebreak beim Matching
-    gleichartiger Nodes (z.B. mehrere CLIPTextEncode). 'schema' kann
-    vom Aufrufer vorgegeben werden (gleicher effektiver Typ -> gleiche
-    Schema-Liste), damit die Lookup-Tabelle nicht pro Node neu
-    aufgebaut wird."""
+    """Return ordered (parameter_name, value) pairs for scoring matches.
+
+    schema supplies parameter names in order; None selects the raw node
+    type's widget schema. An empty or unknown schema yields no pairs.
+    Skip missing parameters and list/dictionary values. Convert numbers
+    and numeric strings to float; keep booleans and other values unchanged.
+    OverflowError from converting a large integer to float propagates.
+    """
     if schema is None:
         schema = NODE_WIDGET_SCHEMA.get(_node_type(node))
     out = []
@@ -125,10 +128,13 @@ def _fmt(v):
 # ----------------------------------------------------------------------
 
 def _score(a, b, fa=None, fb=None):
-    """Matching-Punktzahl: gleicher Roh-Typ +2, gleicher Titel +2,
-    plus Anzahl uebereinstimmender skalarer Parameter.
-    Die Fingerprints koennen vom Aufrufer vorgegeben werden
-    (werden in match_nodes ohnehin pro Node benoetigt)."""
+    """Score raw-type, title, and scalar-parameter agreement between nodes.
+
+    Award two points for equal raw types, two for equal nonempty stripped
+    titles, and one per pair in fa also present in fb. fa and fb are optional
+    precomputed _scalar_fingerprint results; compute each when it is None.
+    Fingerprint OverflowError propagates.
+    """
     s = 0
     if _node_type(a) == _node_type(b):
         s += 2
@@ -144,26 +150,19 @@ def _score(a, b, fa=None, fb=None):
 
 
 def match_nodes(nodes_a, nodes_b):
-    """Greedy-Matching: fuer jeden Node aus A den besten noch freien
-    Kandidaten aus B mit gleichem *effektivem* Typ waehlen (beste
-    Punktzahl via _score, deterministisch in A-Reihenfolge).
+    """Greedily pair nodes with equal effective types in A's input order.
 
-    Effizienz: Nodes beider Seiten werden vorab in Buckets gleichen
-    effektiven Typs einsortiert - die Suche laeuft dann nur noch über
-    Kandidaten desselben Buckets (statt über alle Nodes von B). Inner-
-    halb eines Buckets sind Typ und Widget-Schema identisch, daher
-    wird jeder Skalar-Fingerprint genau EINMAL berechnet. Komplexitaet
-    damit O(n * k + F) statt O(n^2) mit n * k Fingerprint-Aufbauten.
+    Select the unused B node with the highest _score; break ties by B's
+    input order. Known type renames are compatible; unmapped different
+    types remain unmatched. Matching does not imply equal parameters.
 
-    Typ-Renames aus der config-Tabelle werden dadurch automatisch
-    zugeordnet und als 'renamed' gemeldet. Renames AUSSERHALB der
-    Tabelle werden konservativ als entfernt + neu gemeldet.
-
-    Rueckgabe (matches, added, removed, renamed):
-      matches: list[(node_a, node_b)]  - als gleich erkannte Paare
-      added:   list[node]              - nur in B
-      removed: list[node]              - nur in A
-      renamed: list[dict]              - Paare mit Typ-Rename
+    Return (matches, added, removed, renamed): matches contains
+    (node_a, node_b) pairs; added and removed contain unmatched nodes in
+    B and A order, respectively. renamed contains matches with differing
+    raw types as dictionaries with old_node, new_node, old_type, new_type,
+    and known (whether the rename table maps old_type directly to new_type).
+    Returned nodes are the original objects; neither input is mutated.
+    Fingerprint OverflowError propagates, including for unmatched nodes.
     """
     # Vorab: Bucket-Zuordnung + je ein Fingerprint pro Node.
     # 'seq' merkt die urspruengliche Reihenfolge in nodes_b - fuer die
