@@ -205,13 +205,16 @@ PROMPT_PRESETS = {
 }
 
 # ---------------------------------------------------------------
-#  Agnes AI (OpenAI-kompatibel) - ersetzt DeepSeek
+#  minimax H3 API (OpenAI-kompatibel) - ersetzt Agnes AI/DeepSeek.
+#  DIE einzige erlaubte KI-Quelle dieser App. Freigegebene Modelle
+#  stehen ausschliesslich in MD/models.txt (md_whitelist.py).
 # ---------------------------------------------------------------
-AGNES_BASE_URL = "https://apihub.agnes-ai.com/v1"
-AGNES_CHAT_ENDPOINT = AGNES_BASE_URL + "/chat/completions"
-AGNES_DEFAULT_MODEL = "agnes-2.0-flash"
+MINIMAX_BASE_URL = "https://api.minimax.io/v1"
+MINIMAX_CHAT_ENDPOINT = MINIMAX_BASE_URL + "/chat/completions"
+MINIMAX_API_KEY_ENV = "MINIMAX_API_KEY"
 
 # ---------------------------------------------------------------
-#  Lokaler LLM-Server (llama.cpp / LM Studio / Ollama / Kobold)
+#  MD-Sammlung: Pflegequelle fuer Models/Nodes/Workflows der App
+#  (ComfyUi_json_editor/MD im GitHub-Repo des Autors)
 # ---------------------------------------------------------------
-LOCAL_LLM_DEFAULT_URL = "http://127.0.0.1:8080"
+MD_REPO_URL = "https://github.com/igalvadim-debug/ComfyUi_json_editor/tree/main/MD"

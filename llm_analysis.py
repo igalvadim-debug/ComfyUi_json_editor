@@ -1,139 +1,89 @@
-# llm_analysis.py - LLM-Anbindung: Agnes AI (bezahlt, ueber .env
-# Guthaben) und lokales llama.cpp/LM-Studio/Ollama (kostenlos).
-# DeepSeek wurde komplett entfernt.
+# llm_analysis.py - LLM-Anbindung: ausschliesslich minimax H3 API.
+# Die Modelle fuer alle KI-Aufrufe kommen NUR aus der MD-Sammlung
+# (MD/models.txt, siehe md_whitelist.py) - Agnes AI und lokale
+# LLM-Server sind entfernt. Ohne freigegebene MD-Modelle werden
+# keine KI-Funktionen ausgefuehrt (klare Meldung statt Raten).
 
 import os
 import requests
 from dotenv import load_dotenv
 
-from config import PROMPT_PRESETS, AGNES_CHAT_ENDPOINT, AGNES_DEFAULT_MODEL
+from config import PROMPT_PRESETS
+from md_whitelist import (
+    allowed_api_models, default_api_model, call_minimax_chat,
+    MINIMAX_API_KEY_ENV, MD_REPO_URL,
+)
 
 load_dotenv()
 
-AGNES_API_KEY = os.getenv("agnes_API_KEY", "")
+
+def md_models_status():
+    """(erlaubte Modelle oder None, menschenlesbare Statuszeile)."""
+    allowed = allowed_api_models()
+    if not allowed:
+        return None, ("Keine Modelle in MD/models.txt freigegeben "
+                      f"(Datei ist leer/Platzhalter). Pflegequelle: {MD_REPO_URL}")
+    return allowed, f"Erlaubte MD-Modelle: {', '.join(allowed)}"
 
 
 # ═══════════════════════════════════════════════════════════════
-#  Agnes AI (OpenAI-kompatibel)
+#  Einheitliche Prompt-Verbesserung (minimax H3, MD-Modellzwang)
 # ═══════════════════════════════════════════════════════════════
 
-def call_agnes_chat(messages, model=AGNES_DEFAULT_MODEL, max_tokens=800, temperature=0.7):
-    """Ruft Agnes AI (OpenAI-kompatible Chat-Completion) auf.
-    'messages' im ueblichen OpenAI-Format: [{'role':.., 'content':..}]."""
-    if not AGNES_API_KEY:
-        return None, "Kein AGNES_API_KEY in .env gefunden (Schluessel-Name: agnes_API_KEY)"
-    try:
-        r = requests.post(
-            AGNES_CHAT_ENDPOINT,
-            headers={
-                "Authorization": f"Bearer {AGNES_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": model,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-                "messages": messages,
-            },
-            timeout=60,
-        )
-        r.raise_for_status()
-        content = r.json()["choices"][0]["message"]["content"].strip()
-        return content, "OK"
-    except Exception as e:
-        return None, f"Agnes-Fehler: {e}"
-
-
-# ═══════════════════════════════════════════════════════════════
-#  Lokaler LLM-Server (llama.cpp / LM Studio / Ollama / Kobold,
-#  alle OpenAI-kompatibel oder /completion wie llama.cpp)
-# ═══════════════════════════════════════════════════════════════
-
-def call_local_llm(system_prompt, user_text, server_url, max_tokens=512, temperature=0.7):
-    if not server_url.strip():
-        return None, "Keine Server-URL angegeben"
-    url = server_url.rstrip("/")
-    try:
-        if url.endswith("/completion"):
-            r = requests.post(url, json={
-                "prompt": f"<|system|>{system_prompt}<|user|>{user_text}<|assistant|>",
-                "max_tokens": max_tokens, "temperature": temperature,
-                "stop": ["<|user|>", "<|system|>"],
-            }, timeout=60)
-            r.raise_for_status()
-            return r.json().get("content", "").strip(), "OK"
-        else:
-            endpoint = url if url.endswith("/v1/chat/completions") else url + "/v1/chat/completions"
-            r = requests.post(endpoint, json={
-                "model": "local", "temperature": temperature, "max_tokens": max_tokens,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_text},
-                ],
-            }, timeout=60)
-            r.raise_for_status()
-            return r.json()["choices"][0]["message"]["content"].strip(), "OK"
-    except Exception as e:
-        return None, f"Lokaler LLM-Fehler: {e}"
-
-
-# ═══════════════════════════════════════════════════════════════
-#  Einheitliche Prompt-Verbesserung (waehlt Agnes ODER lokal)
-# ═══════════════════════════════════════════════════════════════
-
-def improve_prompt(prompt_text, preset_name, mode="local", server_url=""):
-    """mode: 'local' oder 'agnes'."""
+def improve_prompt(prompt_text, preset_name, mode="minimax", server_url=""):
+    """mode: 'minimax' (einzige erlaubte Quelle; Parameter nur
+    Ruewaarts-Kompatibilitaet fuer die UI)."""
     if not prompt_text.strip():
         return "", "Kein Prompt eingegeben"
 
-    system_prompt = PROMPT_PRESETS.get(preset_name, list(PROMPT_PRESETS.values())[0])
-
-    if mode == "agnes":
-        result, status = call_agnes_chat([
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt_text},
-        ])
-        if result is None:
-            return prompt_text, status
-        return result, f"Verbessert mit Agnes ({preset_name})"
-
-    result, status = call_local_llm(system_prompt, prompt_text, server_url)
-    if result is None:
+    allowed, status = md_models_status()
+    if not allowed:
         return prompt_text, status
-    return result, f"Verbessert lokal ({preset_name})"
+
+    system_prompt = PROMPT_PRESETS.get(preset_name, list(PROMPT_PRESETS.values())[0])
+    result, call_status = call_minimax_chat([
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": prompt_text},
+    ], model=default_api_model())
+    if result is None:
+        return prompt_text, call_status
+    return result, f"Verbessert mit minimax H3 ({preset_name}) | {call_status}"
 
 
 # ═══════════════════════════════════════════════════════════════
-#  Konvertierungs-Zweitmeinung: Agnes bekommt den Konvertierungs-
-#  Report und gibt (nur textuellen!) Rat zu offenen Punkten -
-#  aendert NIE automatisch etwas am Workflow.
+#  Konvertierungs-Zweitmeinung: minimax H3 bekommt den Report und
+#  gibt (nur textuellen!) Rat - aendert NIE automatisch etwas.
 # ═══════════════════════════════════════════════════════════════
 
 def suggest_conversion_advice(context_text):
-    if not AGNES_API_KEY:
-        return "Kein AGNES_API_KEY in .env gefunden (Schluessel-Name: agnes_API_KEY)"
+    """Holt minimax-H3-Konvertierungsrat als Text oder gibt den Fehlerstatus aus."""
+    allowed, status = md_models_status()
+    if not allowed:
+        return status
     messages = [
         {
             "role": "system",
             "content": (
-                "You are an expert on ComfyUI and Lightricks LTX-Video workflows. "
-                "You help migrate LTX 2.3 workflows to LTX 2.5. Given a summary of "
-                "an automatic rule-based conversion, point out anything the automatic "
-                "conversion likely missed or got wrong, and give concrete, actionable "
-                "advice. Be concise. Answer in German."
+                "You are an expert on ComfyUI and minimax H3 video workflows. "
+                "Given a summary of an automatic rule-based conversion, point out "
+                "anything the automatic conversion likely missed or got wrong, and "
+                "give concrete, actionable advice. Only reference models and nodes "
+                "that appear in the user's MD whitelist lists. Be concise. "
+                "Answer in German."
             ),
         },
         {"role": "user", "content": context_text},
     ]
-    result, status = call_agnes_chat(messages, max_tokens=700)
-    return result if result is not None else status
+    result, call_status = call_minimax_chat(messages, max_tokens=700)
+    return result if result is not None else call_status
 
 
 # ═══════════════════════════════════════════════════════════════
-#  Tavily Web-Suche (unveraendert, unabhaengig vom LLM-Anbieter)
+#  Tavily Web-Suche (unabhaengig vom LLM-Anbieter, unveraendert)
 # ═══════════════════════════════════════════════════════════════
 
 def search_workflows_tavily(api_key, query):
+    """Sucht mit Tavily und gibt Ergebnisse oder eine Fehlermeldung als Text aus."""
     if not api_key.strip():
         return "Kein Tavily API-Key eingetragen"
     try:

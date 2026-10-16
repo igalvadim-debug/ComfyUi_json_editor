@@ -1,9 +1,30 @@
 # workflow_io.py - Laden, Normalisieren und Speichern von
-# Workflow-Dateien (JSON / PNG / WebP / MP4)
+# Workflow-Dateien (JSON / PNG / WebP / MP4).
+#
+# MD-Pflicht: Beim Laden wird jeder Workflow gegen die MD-Vorgaben
+# geprueft (minimax H3 + nur Modelle/Nodes aus der MD-Sammlung,
+# siehe md_whitelist.py). Nicht freigegebene Workflows werden
+# zurueckgewiesen. Mit MD_ENFORCE=0 (Umgebungsvariable) laesst sich
+# die Pruefung abschalten (z.B. fuer Tests/Ausnahmen).
 
+import os
 import json, io, re, tempfile
 from pathlib import Path
 from PIL import Image, PngImagePlugin
+
+from md_whitelist import check_workflow
+
+
+def md_enforced():
+    """Meldet, ob die MD-Pruefung aktiv ist (aus bei MD_ENFORCE=0/false/off/no)."""
+    return os.environ.get("MD_ENFORCE", "1").strip().lower() not in ("0", "false", "off", "no")
+
+
+def enforce_md(workflow, source_name=""):
+    """MD-Pruefung; gibt (ok, meldung) zurueck. Bei MD_ENFORCE=0 immer OK."""
+    if not md_enforced():
+        return True, "MD-Pruefung ueberschaltet (MD_ENFORCE=0)"
+    return check_workflow(workflow, source_name)
 
 
 def resolve_file_path(file):
@@ -57,6 +78,7 @@ def normalize_workflow(workflow):
 
 
 def extract_workflow_from_png(image_bytes):
+    """Liest und normalisiert Workflow-JSON aus Bildmetadaten, sonst None."""
     try:
         img = Image.open(io.BytesIO(image_bytes))
         for key in ["workflow", "comfyui_workflow", "prompt", "workflow_json"]:
@@ -78,6 +100,7 @@ def extract_workflow_from_png(image_bytes):
 
 
 def extract_workflow_from_mp4(file_bytes):
+    """Sucht eingebettetes Nodes-JSON in MP4-Bytes und normalisiert es, sonst None."""
     try:
         text = file_bytes.decode("latin-1")
         for m in re.finditer(r'{"nodes":', text):
@@ -92,7 +115,12 @@ def extract_workflow_from_mp4(file_bytes):
 
 
 def load_workflow_file(file):
-    """Hauptfunktion zum Laden. Akzeptiert JSON / PNG / WebP / MP4."""
+    """Hauptfunktion zum Laden. Akzeptiert JSON / PNG / WebP / MP4.
+
+    MD-Regel: Zurueckgegeben wird nur ein Workflow, den die
+    MD-Pruefung (minimax H3 + MD-models/nodes) freigibt - sonst
+    (None, Fehlermeldung mit Begruendung).
+    """
     if file is None:
         return None, "Keine Datei ausgewaehlt"
     try:
@@ -104,22 +132,32 @@ def load_workflow_file(file):
         with open(path, "rb") as f:
             raw = f.read()
 
+        workflow = None
+        msg = None
         if suffix == ".json":
             workflow = normalize_workflow(json.loads(raw.decode("utf-8")))
             n = len(workflow.get("nodes", [])) if workflow else 0
-            return workflow, f"JSON geladen - {n} Nodes ({path.name})"
+            msg = f"JSON geladen - {n} Nodes ({path.name})"
         elif suffix in (".png", ".webp"):
             workflow = extract_workflow_from_png(raw)
             if workflow:
-                return workflow, f"Workflow aus {suffix.upper()} - {len(workflow.get('nodes', []))} Nodes"
-            return None, f"Kein Workflow in {suffix.upper()} gefunden"
+                msg = f"Workflow aus {suffix.upper()} - {len(workflow.get('nodes', []))} Nodes"
+            else:
+                return None, f"Kein Workflow in {suffix.upper()} gefunden"
         elif suffix == ".mp4":
             workflow = extract_workflow_from_mp4(raw)
             if workflow:
-                return workflow, f"Workflow aus MP4 - {len(workflow.get('nodes', []))} Nodes"
-            return None, "Kein Workflow in MP4 gefunden"
+                msg = f"Workflow aus MP4 - {len(workflow.get('nodes', []))} Nodes"
+            else:
+                return None, "Kein Workflow in MP4 gefunden"
         else:
             return None, f"Format nicht unterstuetzt: {suffix}"
+
+        # ---- MD-Pflichtpruefung (minimax H3 + MD-Whitelist) ----
+        ok, md_report = enforce_md(workflow, path.name)
+        if not ok:
+            return None, f"ABGELEHNT (MD-Vorgaben nicht erfuetlt):\n{md_report}"
+        return workflow, msg + "\n" + md_report
     except Exception as e:
         return None, f"Fehler beim Laden: {e}"
 
@@ -131,6 +169,10 @@ def load_workflow_from_path(path_str):
 
 
 def save_as_json(workflow):
+    """Speichert den Workflow als temporaeres JSON und liefert den Pfad.
+
+    Gibt None bei leerem Workflow zurueck; Schreibfehler propagieren.
+    """
     if not workflow:
         return None
     tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8")

@@ -4,7 +4,7 @@
 #
 # Prinzip: Regelbasiert (schnell, kostenlos, deterministisch).
 # Nur wenn etwas nicht eindeutig zuordenbar ist, wird das im
-# Report vermerkt - eine LLM-Zweitmeinung (Agnes) kann optional
+# Report vermerkt - eine LLM-Zweitmeinung (minimax H3) kann optional
 # in llm_analysis.py dazu befragt werden, AUTOMATISCH aendert die
 # KI dabei nichts am Workflow (Sicherheit / Nachvollziehbarkeit).
 
@@ -20,6 +20,7 @@ from model_manager import scan_ltx_models_by_version, find_25_equivalent
 
 
 def _is_2_3_filename(text):
+    """Prueft einen String auf bekannte LTX-2.3-Dateinamenmuster."""
     if not isinstance(text, str):
         return False
     low = text.lower()
@@ -27,6 +28,7 @@ def _is_2_3_filename(text):
 
 
 def _new_loader_node(node_id, node_type, title, widgets_values, output_name, output_type):
+    """Erstellt ein Loader-Node-Dict mit einem noch unverbundenen Ausgang."""
     return {
         "id": node_id,
         "type": node_type,
@@ -48,6 +50,10 @@ def _new_loader_node(node_id, node_type, title, widgets_values, output_name, out
 # ═══════════════════════════════════════════════════════════════
 
 def rename_deprecated_nodes(workflow):
+    """Benennt bekannte Node-Typen im Workflow auf LTX 2.5 um.
+
+    Aendert den Workflow direkt und gibt (workflow, report_liste) zurueck.
+    """
     report = []
     for node in workflow.get("nodes", []):
         old_type = _node_type(node)
@@ -65,6 +71,11 @@ def rename_deprecated_nodes(workflow):
 # ═══════════════════════════════════════════════════════════════
 
 def replace_checkpoint_with_split_loaders(workflow, yaml_paths=None):
+    """Ersetzt Checkpoint-Loader direkt durch UNET-, CLIP- und zwei VAE-Nodes.
+
+    Verbindet die Ausgaenge neu und nutzt lokale 2.5-Modelle, sofern
+    verfuegbar, sonst Platzhalter. Gibt (workflow, report_liste) zurueck.
+    """
     report = []
     nodes = workflow.get("nodes", [])
     links = workflow.get("links", [])
@@ -164,6 +175,10 @@ def replace_checkpoint_with_split_loaders(workflow, yaml_paths=None):
 # ═══════════════════════════════════════════════════════════════
 
 def rename_leftover_model_filenames(workflow, yaml_paths=None):
+    """Ersetzt 2.3-Dateinamen in Widgets direkt durch gefundene 2.5-Pendants.
+
+    Gibt (workflow, report_liste) zurueck; fehlende Treffer werden gemeldet.
+    """
     report = []
     for node in workflow.get("nodes", []):
         wv = node.get("widgets_values")
@@ -189,6 +204,10 @@ def rename_leftover_model_filenames(workflow, yaml_paths=None):
 # ═══════════════════════════════════════════════════════════════
 
 def flag_incompatible_loras(workflow):
+    """Setzt LTX-2.3-LoRA-Nodes direkt auf Bypass (mode=4).
+
+    Gibt (workflow, report_liste) mit den deaktivierten LoRAs zurueck.
+    """
     report = []
     for node in workflow.get("nodes", []):
         ctype = _node_type(node)
@@ -239,7 +258,7 @@ def convert_workflow_2_3_to_2_5(workflow, yaml_paths=None):
 
 def build_llm_context(workflow, report):
     """Baut eine kompakte Textzusammenfassung fuer eine optionale
-    LLM-Zweitmeinung (Agnes) - z.B. bei unklaren/manuellen Punkten."""
+    LLM-Zweitmeinung (minimax H3) - z.B. bei unklaren/manuellen Punkten."""
     nodes = workflow.get("nodes", []) if workflow else []
     types = sorted(set(_node_type(n) for n in nodes))
     lines = [
