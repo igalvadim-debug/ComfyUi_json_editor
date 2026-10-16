@@ -16,6 +16,7 @@ from md_whitelist import check_workflow
 
 
 def md_enforced():
+    """Meldet, ob die MD-Pruefung aktiv ist (aus bei MD_ENFORCE=0/false/off/no)."""
     return os.environ.get("MD_ENFORCE", "1").strip().lower() not in ("0", "false", "off", "no")
 
 
@@ -77,6 +78,7 @@ def normalize_workflow(workflow):
 
 
 def extract_workflow_from_png(image_bytes):
+    """Liest und normalisiert Workflow-JSON aus Bildmetadaten, sonst None."""
     try:
         img = Image.open(io.BytesIO(image_bytes))
         for key in ["workflow", "comfyui_workflow", "prompt", "workflow_json"]:
@@ -98,6 +100,7 @@ def extract_workflow_from_png(image_bytes):
 
 
 def extract_workflow_from_mp4(file_bytes):
+    """Sucht eingebettetes Nodes-JSON in MP4-Bytes und normalisiert es, sonst None."""
     try:
         text = file_bytes.decode("latin-1")
         for m in re.finditer(r'{"nodes":', text):
@@ -166,6 +169,10 @@ def load_workflow_from_path(path_str):
 
 
 def save_as_json(workflow):
+    """Speichert den Workflow als temporaeres JSON und liefert den Pfad.
+
+    Gibt None bei leerem Workflow zurueck; Schreibfehler propagieren.
+    """
     if not workflow:
         return None
     tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8")

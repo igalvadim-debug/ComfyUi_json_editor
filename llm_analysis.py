@@ -56,6 +56,7 @@ def improve_prompt(prompt_text, preset_name, mode="minimax", server_url=""):
 # ═══════════════════════════════════════════════════════════════
 
 def suggest_conversion_advice(context_text):
+    """Holt minimax-H3-Konvertierungsrat als Text oder gibt den Fehlerstatus aus."""
     allowed, status = md_models_status()
     if not allowed:
         return status
@@ -82,6 +83,7 @@ def suggest_conversion_advice(context_text):
 # ═══════════════════════════════════════════════════════════════
 
 def search_workflows_tavily(api_key, query):
+    """Sucht mit Tavily und gibt Ergebnisse oder eine Fehlermeldung als Text aus."""
     if not api_key.strip():
         return "Kein Tavily API-Key eingetragen"
     try:

@@ -148,6 +148,7 @@ def parse_comfyui_log(log_text):
 # ═══════════════════════════════════════════════════════════════
 
 def _all_nodes(workflow):
+    """Sammelt Top-Level-Nodes und Nodes der direkten Workflow-Subgraphs."""
     nodes = list(workflow.get("nodes", []))
     for sg in (workflow.get("definitions") or {}).get("subgraphs") or []:
         nodes += sg.get("nodes", [])
@@ -225,6 +226,10 @@ def analyze_workflow_structure(workflow, vram_gb):
 # ═══════════════════════════════════════════════════════════════
 
 def estimate_gguf_size_gb(params_b, quant):
+    """Schaetzt GB aus Milliarden Parametern und Quant mit 5% Aufschlag.
+
+    Gibt None zurueck, wenn die Quant-Stufe unbekannt ist.
+    """
     bits = GGUF_BITS_PER_PARAM.get(quant)
     if bits is None:
         return None
@@ -308,6 +313,7 @@ def recommend_gguf(vram_gb, ltx_version, ram_gb=None, overhead_gb=2.5):
 # ═══════════════════════════════════════════════════════════════
 
 def build_full_report(workflow, user_text, vram_gb, ltx_version, ram_gb=None):
+    """Buendelt Log-Analyse, Workflow-Pruefung und GGUF-Empfehlung als Text."""
     sections = []
 
     log_issues, det_vram_mb, det_gpu, det_mode = parse_comfyui_log(user_text)

@@ -54,6 +54,7 @@ def _md_filter_models(category, choices):
     import re as _re
 
     def _norm(s):
+        """Normalisiert Modellnamen ohne Leerraum, _, - und Punkte auf Kleinbuchstaben."""
         return _re.sub(r"[\s_\-.]+", "", str(s)).lower()
 
     allowed_norm = {_norm(e) for e in entries}
@@ -67,10 +68,12 @@ def _md_filter_models(category, choices):
 
 
 def _make_choices(category):
+    """Liefert MD-gefilterte Katalogeintraege einer Kategorie oder einen Platzhalter."""
     return _md_filter_models(category, _model_catalog.get(category, ["(keine Modelle)"]))
 
 
 def _list_example_workflows():
+    """Listet JSON-Beispielpfade unter EXAMPLE_DIR rekursiv und sortiert auf."""
     files = []
     for root, _dirs, names in os.walk(EXAMPLE_DIR):
         for n in names:
@@ -88,6 +91,7 @@ _example_files = _list_example_workflows()
 # ═══════════════════════════════════════════════════════════════
 
 def _build_load_track(label, wf_state, wf_orig):
+    """Verdrahtet Laden, MD-Status, Vorschau und Reset fuer eine Workflow-Spur."""
     gr.Markdown(f"### Workflow {label} (minimax H3 + MD-Freigabe noetig)")
     file_input = gr.File(label="JSON / PNG / WebP / MP4",
                           file_types=[".json", ".png", ".webp", ".mp4"])
@@ -102,6 +106,7 @@ def _build_load_track(label, wf_state, wf_orig):
     prompt_preview = gr.Textbox(label="Gefundene Prompts", lines=8, interactive=False)
 
     def on_load(file, example_path):
+        """Laedt bevorzugt den Upload und liefert Zustaende, Status und Analysedaten."""
         src = file if file is not None else example_path
         wf, msg = load_workflow_file(src)   # MD-Pruefung ist hier schon integriert
         if wf is None:
@@ -118,6 +123,7 @@ def _build_load_track(label, wf_state, wf_orig):
     )
 
     def on_reset(orig):
+        """Liefert den Original-Workflow samt Status und aktualisierten Analysedaten."""
         summary, df, _ = analyze_workflow(orig)
         return orig, "Zurueckgesetzt", detect_ltx_version(orig), summary, df, get_prompt_texts(orig)
 
@@ -132,6 +138,7 @@ def _build_load_track(label, wf_state, wf_orig):
 # ═══════════════════════════════════════════════════════════════
 
 def _build_convert_track(label, wf_state):
+    """Verdrahtet LTX-Konvertierung und optionale minimax-Zweitmeinung einer Spur."""
     gr.Markdown(f"### Konvertierung {label}: LTX 2.3 -> 2.5")
     convert_btn = gr.Button(f"Konvertieren {label}", variant="primary")
     report_box = gr.Textbox(label="Konvertierungs-Report", lines=12, interactive=False)
@@ -141,12 +148,14 @@ def _build_convert_track(label, wf_state):
                             lines=10, interactive=False)
 
     def on_convert(wf):
+        """Liefert den konvertierten Workflow und den Report als Text."""
         new_wf, report = convert_workflow_2_3_to_2_5(wf, _yaml_paths)
         return new_wf, "\n".join(report)
 
     convert_btn.click(on_convert, inputs=[wf_state], outputs=[wf_state, report_box])
 
     def on_minimax(wf, report_text):
+        """Holt Rat zum Konvertierungsreport oder meldet, dass dieser noch fehlt."""
         if not report_text.strip():
             return "Bitte zuerst 'Konvertieren' ausfuehren."
         context = build_llm_context(wf, report_text.split("\n"))
@@ -160,6 +169,7 @@ def _build_convert_track(label, wf_state):
 # ═══════════════════════════════════════════════════════════════
 
 def _build_model_track(label, wf_state):
+    """Baut MD-gefilterte Modell-Dropdowns und verdrahtet den GGUF-Ersatz."""
     gr.Markdown(f"### Modelle {label} "
                 "(Dropdowns gefiltert auf MD/models.txt - nur freigegebene Modelle)")
     ckpt_dd = gr.Dropdown(
@@ -176,6 +186,7 @@ def _build_model_track(label, wf_state):
     gguf_status = gr.Textbox(label="Ergebnis", interactive=False)
 
     def on_gguf(wf, unet, c1, c2, vae, ctype):
+        """Ersetzt Checkpoint-Nodes mit der Modellwahl oder den Standarddateinamen."""
         return replace_checkpoint_with_gguf(
             wf, unet or "model.gguf", c1 or "clip_l.safetensors",
             c2 or "clip_g.safetensors", vae or "vae.safetensors", ctype or "ltxv")
@@ -189,6 +200,7 @@ def _build_model_track(label, wf_state):
 # ═══════════════════════════════════════════════════════════════
 
 def _build_ltx_track(label, wf_state):
+    """Baut LTX-Regler einer Spur und verbindet sie mit den Workflow-Einstellungen."""
     gr.Markdown(f"### LTX-Einstellungen {label}")
     ltx_audio = gr.Checkbox(label="Mit Ton", value=False)
     ltx_width = gr.Slider(256, 1920, step=32, value=768, label="Width")
@@ -213,6 +225,7 @@ def _build_ltx_track(label, wf_state):
 # ═══════════════════════════════════════════════════════════════
 
 def _build_prompt_track(label, wf_state):
+    """Verdrahtet Prompt-Laden, minimax-Verbesserung und Uebernahme fuer eine Spur."""
     gr.Markdown(f"### Prompt-Verbesserung {label} "
                 "(minimax H3 - Modellzwang aus MD/models.txt)")
     allowed, status = md_models_status()
@@ -230,10 +243,12 @@ def _build_prompt_track(label, wf_state):
         apply_neg_btn = gr.Button("-> Negative Nodes")
 
     def load_pos(wf):
+        """Liest den ersten positiven Prompt aus dem Workflow."""
         from workflow_analysis import get_first_positive_prompt
         return get_first_positive_prompt(wf)
 
     def on_improve(prompt_text, preset_name, model_choice):
+        """Liefert den verbesserten Prompt samt Status, bei Fehlern den Originaltext."""
         # Nur MD-freigegebene Modelle akzeptieren; sonst klare Absage.
         if not allowed:
             return prompt_text, status
@@ -263,6 +278,7 @@ def _build_prompt_track(label, wf_state):
 # ═══════════════════════════════════════════════════════════════
 
 def _build_save_track(label, wf_state):
+    """Verdrahtet JSON-/PNG-Downloads und die Workflow-Vorschau einer Spur."""
     gr.Markdown(f"### Speichern {label}")
     json_btn = gr.Button(f"Als JSON herunterladen {label}", variant="primary")
     json_download = gr.File(label="JSON")
@@ -282,6 +298,7 @@ def _build_save_track(label, wf_state):
 # ═══════════════════════════════════════════════════════════════
 
 def _build_modify_track(label, wf_state, wf_orig):
+    """Verdrahtet Block-Erkennung, Deaktivierung, Export und Reset einer Spur."""
     gr.Markdown(f"### Workflow {label} modifizieren")
     info_box = gr.Textbox(label="Verfuegbare Bloeke", lines=8, interactive=False)
     block_box = gr.CheckboxGroup(
@@ -297,6 +314,7 @@ def _build_modify_track(label, wf_state, wf_orig):
     file_out = gr.File(label="Modifizierter Workflow (JSON) - direkt herunterladen")
 
     def on_detect(wf):
+        """Liefert auswaehlbare Workflow-Bloecke und den Erkennungsstatus."""
         if not wf or "nodes" not in wf:
             return gr.update(choices=[], value=[]), "Kein Workflow geladen."
         blocks = detect_blocks(wf)
@@ -307,6 +325,7 @@ def _build_modify_track(label, wf_state, wf_orig):
         return gr.update(choices=found, value=[]), "Gefunden:\n" + "\n".join(found)
 
     def on_apply(wf, selected):
+        """Deaktiviert gewaehlte Bloecke und liefert Pruefbericht sowie Exportdaten."""
         if not wf or "nodes" not in wf:
             return wf, gr.update(value=[]), "", "Kein Workflow geladen."
         if not selected:
@@ -326,6 +345,7 @@ def _build_modify_track(label, wf_state, wf_orig):
                 "\n".join(report + [vmsg]), summary, save_path)
 
     def on_reset(orig):
+        """Stellt das Original her und leert Blockauswahl, Report und Download."""
         return orig, gr.update(choices=[], value=[]), "", "Zurueckgesetzt (Original wiederhergestellt)", None
 
     detect_btn.click(on_detect, inputs=[wf_state], outputs=[block_box, info_box])
@@ -340,6 +360,7 @@ def _build_modify_track(label, wf_state, wf_orig):
 # ═══════════════════════════════════════════════════════════════
 
 def _build_diagnostics_track(label, wf_state):
+    """Verdrahtet Hardwarewahl, Regeldiagnose und minimax-Zweitmeinung einer Spur."""
     gr.Markdown(f"### Fehleranalyse {label}")
     gpu_dd = gr.Dropdown(choices=list(GPU_VRAM_PRESETS.keys()),
                           value="RTX 5060 Laptop (8 GB)", label="GPU-Preset")
@@ -358,11 +379,13 @@ def _build_diagnostics_track(label, wf_state):
     mm_out2 = gr.Textbox(label="minimax-H3-Einschaetzung", lines=10, interactive=False)
 
     def on_gpu_change(gpu_name):
+        """Liefert den VRAM-Preset in GB, bei unbekannter GPU den Standardwert 8."""
         return GPU_VRAM_PRESETS.get(gpu_name, 8)
 
     gpu_dd.change(on_gpu_change, inputs=[gpu_dd], outputs=[vram_num])
 
     def on_analyze(wf, text, vram_gb, ram_gb, ltx_version):
+        """Erstellt den Diagnosetext mit normalisierten VRAM- und RAM-Angaben."""
         report = build_full_report(wf, text or "", int(vram_gb or 8), ltx_version, int(ram_gb) if ram_gb else None)
         return report
 
@@ -370,6 +393,7 @@ def _build_diagnostics_track(label, wf_state):
                        outputs=[report_out])
 
     def on_minimax(wf, text, vram_gb, ltx_version, rule_report):
+        """Holt eine Diagnose-Zweitmeinung oder meldet den fehlenden Regelreport."""
         if not rule_report.strip():
             return "Bitte zuerst 'Analysieren' ausfuehren."
         context = build_minimax_context(wf, text or "", int(vram_gb or 8), ltx_version, rule_report)
@@ -395,6 +419,7 @@ def _build_diagnostics_track(label, wf_state):
 # ═══════════════════════════════════════════════════════════════
 
 def build_app():
+    """Erstellt die Gradio-App mit zwei Workflow-Spuren und gibt die Blocks zurueck."""
     with gr.Blocks(title=TITLE) as demo:
         gr.Markdown(f"# {TITLE}")
 

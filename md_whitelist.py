@@ -46,14 +46,17 @@ def load_md_lists():
 
 
 def models_allowed():
+    """Gibt an, ob MD/models.txt mindestens einen Modelleintrag enthaelt."""
     return bool(load_md_lists()["models"])
 
 
 def nodes_allowed():
+    """Gibt an, ob MD/nodes.txt mindestens einen Node-Eintrag enthaelt."""
     return bool(load_md_lists()["nodes"])
 
 
 def workflows_allowed():
+    """Gibt an, ob MD/workflows.txt mindestens einen Workflow-Eintrag enthaelt."""
     return bool(load_md_lists()["workflows"])
 
 
@@ -84,6 +87,7 @@ def is_minimax_h3_workflow(workflow):
             texts += [str(x) for x in v.values() if isinstance(x, str)]
 
     def scan_strings(obj, depth=0):
+        """Sammelt Strings und Dict-Schluessel bis Tiefe 6, je Liste maximal 200."""
         if depth > 6:
             return
         if isinstance(obj, str):
@@ -122,6 +126,7 @@ def describe_format(workflow):
 # ═══════════════════════════════════════════════════════════════
 
 def _norm(s):
+    """Normalisiert Text auf Kleinschreibung ohne Leerraum, _, - und Punkte."""
     return re.sub(r"[\s_\-.]+", "", str(s)).lower()
 
 
@@ -160,6 +165,7 @@ def collect_models(workflow):
         return found
 
     def add(val, where):
+        """Merkt nichtleere Strings mit Modellendung oder Pfadtrenner samt Fundort."""
         if isinstance(val, str) and val.strip():
             low = val.lower()
             if any(ext in low for ext in (".safetensors", ".gguf", ".ckpt", ".pt",
@@ -197,6 +203,7 @@ def collect_nodes(workflow):
     types = {}
 
     def walk(nodes):
+        """Ergaenzt die Typ-zu-ID-Tabelle aus einer Node-Liste."""
         for node in nodes or []:
             t = str(node.get("type") or node.get("class_type") or "?")
             types.setdefault(t, []).append(str(node.get("id", "?")))
@@ -300,6 +307,7 @@ def allowed_api_models():
 
 
 def default_api_model():
+    """Gibt das erste freigegebene API-Modell zurueck, sonst None."""
     allowed = allowed_api_models()
     return allowed[0] if allowed else None
 
