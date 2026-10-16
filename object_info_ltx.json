@@ -1,0 +1,2833 @@
+{
+  "CheckpointLoaderSimple": {
+    "input": {
+      "required": {
+        "ckpt_name": [
+          [
+            "10Eros_v1_int8_ConvRot.safetensors",
+            "Flux_NSFW_v40.safetensors",
+            "RealVisXL_V5.0_fp16.safetensors",
+            "SD15\\lazymixRealAmateur_v40Inpainting.safetensors",
+            "SDXL\\hephaistosNextgen_v10ExperimentalBF16.safetensors",
+            "SDXL\\sd_xl_base_1.0.safetensors",
+            "SDXL\\sd_xl_refiner_1.0.safetensors",
+            "SDXL\\sd_xl_turbo_1.0_fp16.safetensors",
+            "fenris_xl.safetensors",
+            "flux-2-klein-4b.safetensors",
+            "flux1-dev-bnb-nf4-v2.safetensors",
+            "flux1-schnell-fp8.safetensors",
+            "flux2Klein_9b.safetensors",
+            "fluxFillFP8_v10.safetensors",
+            "fluxKreaDevNsfwFp8_v10.safetensors",
+            "halcyonSDXL_v17.safetensors",
+            "hunyuan3d-dit-v2-mv_fp16.safetensors",
+            "hunyuan_3d_v2.1.safetensors",
+            "idea\\ideogram4_fp8_scaled.safetensors",
+            "idea\\ideogram4_unconditional_fp8_scaled.safetensors",
+            "ideogram4_fp8_scaled.safetensors",
+            "ideogram4_unconditional_fp8_scaled.safetensors",
+            "sam3.1_multiplex_fp16.safetensors",
+            "z-image-turbo-fp8-aio.safetensors"
+          ],
+          {
+            "tooltip": "The name of the checkpoint (model) to load."
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "ckpt_name"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "MODEL",
+      "CLIP",
+      "VAE"
+    ],
+    "output_is_list": [
+      false,
+      false,
+      false
+    ],
+    "output_name": [
+      "MODEL",
+      "CLIP",
+      "VAE"
+    ],
+    "name": "CheckpointLoaderSimple",
+    "display_name": "Load Checkpoint",
+    "description": "Loads a diffusion model checkpoint, diffusion models are used to denoise latents.",
+    "python_module": "nodes",
+    "category": "model/loaders",
+    "output_node": false,
+    "has_intermediate_output": false,
+    "output_tooltips": [
+      "The model used for denoising latents.",
+      "The CLIP model used for encoding text prompts.",
+      "The VAE model used for encoding and decoding images to and from latent space."
+    ],
+    "search_aliases": [
+      "load model",
+      "checkpoint",
+      "model loader",
+      "load checkpoint",
+      "ckpt",
+      "model"
+    ]
+  },
+  "LoraLoaderModelOnly": {
+    "input": {
+      "required": {
+        "model": [
+          "MODEL"
+        ],
+        "lora_name": [
+          [
+            "Fantasy_Realism.safetensors",
+            "FireRed-Image-Edit-1.0-Lightning-8steps-v1.1.safetensors",
+            "Hyper-SD15-8steps-CFG-lora.safetensors",
+            "Hyper-SDXL-8steps-CFG-lora.safetensors",
+            "Hyper-SDXL-8steps-lora.safetensors",
+            "Klein-consistency.safetensors",
+            "Krea2-depth-control-lora.safetensors",
+            "Krea2\\KREA2_D33P_V2.safetensors",
+            "Krea2\\Krea2NSFWStaerke1.2_1.5V4.safetensors",
+            "Krea2\\Krea2_HMNSFW_AIO.safetensors",
+            "Krea2\\krea2_darkbrush.safetensors",
+            "Krea2\\krea2_identity_edit_v1_1.safetensors",
+            "Krea2\\krea2_turbo_lora_rank_64_bf16.safetensors",
+            "Krea2\\krea2filterbypass.safetensors",
+            "LCM_LoRA_Weights_SDXL.safetensors",
+            "Qwen-Image-Lightning-4steps-V1.0-bf16.safetensors",
+            "SD1.5_SoiData.safetensors",
+            "SDXLX_Miku_NAKANO.safetensors",
+            "Shaiden_Rogue_Flux.safetensors",
+            "ace\\ace_step_v1_lora_kajiura.safetensors",
+            "ace\\ace_step_v1_lora_sawano.safetensors",
+            "ace\\ace_step_v1_lora_shoujobyou.safetensors",
+            "ace_step\\Epic Music.safetensors",
+            "ace_step\\Eurobeat lora.safetensors",
+            "ace_step\\techno-rain.safetensors",
+            "animatediff_lightning_4step_diffusers.safetensors",
+            "anna\\m_xO4abTFgPwX3njmort3_pytorch_lora_weights.safetensors",
+            "bfs_face_v1_qwen_image_edit_2509.safetensors",
+            "dramatic_dark_lighting.safetensors",
+            "eugen1024lora.safetensors",
+            "flux2\\bj_20260120_22-22-29epoch15_comfy.safetensors",
+            "flux2\\gf-next-anal.safetensors",
+            "flux2_klein_9b\\FLUX2_KLEIN_UNLOCKED_V2.safetensors",
+            "flux2_klein_9b\\V2_flux_klein_4_V2_flux_klein_4.safetensors",
+            "flux2_klein_9b\\[flux2-klein-9b] Pyro's BJ_v20260120.safetensors",
+            "flux2_klein_9b\\[flux2-klein-9b] Pyro's Cowgirls_v1.0.safetensors",
+            "flux2_klein_9b\\bfs_head_v1_flux-klein_9b_step3500_rank128.safetensors",
+            "flux2_klein_9b\\klein_9b_enhancer_v2_klein_9b_enhancer_v2.safetensors",
+            "flux\\AWPortraitFL\\AWPortrait-FL-lora.safetensors",
+            "flux\\Canopus-Clothing-Flux-Dev-Florence2-LoRA.safetensors",
+            "flux\\Clothes_onoff.safetensors",
+            "flux\\DollCute.safetensors",
+            "flux\\FLUX Female Anatomy.safetensors",
+            "flux\\FLUX More Female Anatomy.safetensors",
+            "flux\\FLUX.1-Turbo-Alpha.safetensors",
+            "flux\\FLUX_Blowjob.safetensors",
+            "flux\\Futanari_with_erect_penis_v2.safetensors",
+            "flux\\Hyper-FLUX.1-dev-8steps-lora.safetensors",
+            "flux\\Penis_on_Face_p3n1sF4ce .safetensors",
+            "flux\\ThroatedV2_000002950.safetensors",
+            "flux\\boFLUX Steampunk Style.safetensors",
+            "flux\\collbdy.safetensors",
+            "flux\\dark_fantasy_lora.safetensors",
+            "flux\\engrave.safetensors",
+            "flux\\flux-fashion-lora.safetensors",
+            "flux\\fluxRealSkin-V2.safetensors",
+            "flux\\fp8-lora-r640_cq1.0-fp8-flux1-fill-dev.safetensors",
+            "flux\\outfit-generator.safetensors",
+            "flux\\realism_lora.safetensors",
+            "flux\\slptp-blowjob-lora.safetensors",
+            "flux\\xia3.safetensors",
+            "flux\\xlabs_flux_realism_lora_comfui.safetensors",
+            "fluxgym_06.01.26_sweta_sweta.safetensors",
+            "gemma-3-12b-it-abliterated_lora_rank64_bf16.safetensors",
+            "ip-adapter-faceid-plus_sd15_lora.safetensors",
+            "ip-adapter-faceid-plusv2_sd15_lora.safetensors",
+            "ip-adapter-faceid_sd15_lora.safetensors",
+            "krea2_turbo_distill_r64.safetensors",
+            "ltx2.3\\LTX-2.3-Licon-MSR-V2.safetensors",
+            "ltx2.3\\Singularity-LTX-2.3_OmniCine_V1.safetensors",
+            "ltx2\\DaSiWa_LTX23_NSFW_Bodyphysics_Fluid_Motion_Enhancer_v01.safetensors",
+            "ltx2\\Fantasy_Painterly.safetensors",
+            "ltx2\\LTX-2.3-22b-AV-LoRA-talking-head-v1_OHWXPERSON.safetensors",
+            "ltx2\\LTX-2.3-Henshin.safetensors",
+            "ltx2\\LTX-2.3-ID-LoRA-TalkVid-3K.safetensors",
+            "ltx2\\LTX-2.3-Latin dance.safetensors",
+            "ltx2\\LTX-2.3-Licon-MSR-V1.safetensors",
+            "ltx2\\LTX-2.3-OmniNFT-RL-Lora_bf16.safetensors",
+            "ltx2\\LTX-2.3-danceV2.comfy.safetensors",
+            "ltx2\\LTX2-i2v-OralSuite.safetensors",
+            "ltx2\\LTX2.3-IC-LORA-Dual-Character.safetensors",
+            "ltx2\\LTX2.3-MysticXXX.safetensors",
+            "ltx2\\LTX2.3_Crisp_Enhance.safetensors",
+            "ltx2\\LTX2.3_DMD_hybrid_v2.safetensors",
+            "ltx2\\LTX23_Obscura_Remova_v1.safetensors",
+            "ltx2\\LTX_10Eros_LoRA_fro99-avgrank77.safetensors",
+            "ltx2\\Ltx2.3-Licon-VBVR-I2V-96000-R32.safetensors",
+            "ltx2\\Singularity-LTX-2.3_OmniCine_V1.safetensors",
+            "ltx2\\Western-comic-a-semi_1_LTX23_v1.safetensors",
+            "ltx2\\bfs_head_swap_v1_ltx2_ic_lora_6000.safetensors",
+            "ltx2\\cowgirl-ride-withfuta.safetensors",
+            "ltx2\\epic_cumshots-V1-LTX_2_3-CUMSH0T.safetensors",
+            "ltx2\\id-lora-celebvhq-ltx2.3.safetensors",
+            "ltx2\\lightx2v_I2V_14B_480p_cfg_step_distill_rank128_bf16.safetensors",
+            "ltx2\\lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+            "ltx2\\ltx-2-19b-ic-lora-detailer.safetensors",
+            "ltx2\\ltx-2-2.3-i2v-nsfw-furry-multi-purpose-sex-lora.safetensors",
+            "ltx2\\ltx-2.3-22b-distilled-1.1_lora-dynamic_fro09_avg_rank_111_bf16.safetensors",
+            "ltx2\\ltx-2.3-22b-distilled-lora-1.1_fro90_ceil36.safetensors",
+            "ltx2\\ltx-2.3-22b-distilled-lora-384.safetensors",
+            "ltx2\\ltx-2.3-22b-ic-lora-ingredients-0.9.safetensors",
+            "ltx2\\ltx-2.3-22b-ic-lora-motion-track-control-ref0.5.safetensors",
+            "ltx2\\ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors",
+            "ltx2\\ltx-2.3-22b_text_embedding_projection.safetensors",
+            "ltx2\\ltx-2.3-Sound_besser_foley-400-steps.safetensors",
+            "ltx2\\ltx-2.3-dollyforward_lora.safetensors",
+            "ltx2\\ltx2.3-ic-subtitles-remove-general.safetensors",
+            "ltx2\\ltx2.3-transition_zhuanchang.safetensors",
+            "ltx2\\ltx2.3_fpv_motion.safetensors",
+            "ltx2\\ltx2.3_upscale_ic-lora_06250.safetensors",
+            "ltx2\\ltx23_inpaint_rank128_v1.safetensors",
+            "ltx2\\ltx23_srx_scififilm_lora.safetensors",
+            "ltx2\\ltx23_zoomout_z00m047.safetensors",
+            "ltx2\\ltxdeepthroat_v01.safetensors",
+            "ltx2\\m4crom4sti4-huge-natural-breasts-ltx2.3-k3nk.safetensors",
+            "ltx2\\motion_stabilizer_ltx_lora_v2.safetensors",
+            "ltx2\\sexLoraLTX23Penile_Praxis_V4.safetensors",
+            "ltx2\\sfbehind_LTX2_3_v0_1.safetensors",
+            "pixel_art_style_z_image_turbo.safetensors",
+            "portrait_lora64.safetensors",
+            "pussydiffusion-f2-klein-9b_v2.safetensors",
+            "pussydiffusion-shaved_innie-f2-klein-9b_v1.safetensors",
+            "realism_engine_krea2_v2.safetensors",
+            "realism_lora_comfy_converted.safetensors",
+            "schorthair.safetensors",
+            "sd_xl_offset_example-lora_1.0.safetensors",
+            "snofs_ideogram_v1_1.safetensors",
+            "sweta_lora.safetensors",
+            "wan\\DR34ML4Y_I2V_14B_HIGH.safetensors",
+            "wan\\DR34ML4Y_I2V_14B_LOW.safetensors",
+            "wan\\DR34ML4Y_LTXXX_V2.safetensors",
+            "wan\\Wan21_I2V_14B_lightx2v_cfg_step_distill_lora_rank64.safetensors",
+            "wan\\Wan21_PusaV1_LoRA_14B_rank512_bf16.safetensors"
+          ]
+        ],
+        "strength_model": [
+          "FLOAT",
+          {
+            "default": 1.0,
+            "min": -100.0,
+            "max": 100.0,
+            "step": 0.01
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "model",
+        "lora_name",
+        "strength_model"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "MODEL"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "MODEL"
+    ],
+    "name": "LoraLoaderModelOnly",
+    "display_name": "Load LoRA",
+    "description": "This LoRAs loader is used to modify the diffusion model, altering the way in which latents are denoised such as applying styles. Multiple LoRA nodes can be linked together.",
+    "python_module": "nodes",
+    "category": "model/loaders",
+    "output_node": false,
+    "has_intermediate_output": false,
+    "output_tooltips": [
+      "The modified diffusion model.",
+      "The modified CLIP model."
+    ],
+    "search_aliases": [
+      "lora",
+      "load lora",
+      "apply lora",
+      "lora loader",
+      "lora model"
+    ],
+    "essentials_category": "Image Generation"
+  },
+  "LTXAVTextEncoderLoader": {
+    "input": {
+      "required": {
+        "text_encoder": [
+          "COMBO",
+          {
+            "multiselect": false,
+            "options": [
+              "ViT-L-14-BEST-smooth-GmP-HF-format.safetensors",
+              "ViT-L-14-TEXT-detail-improved-hiT-GmP-TE-only-HF.safetensors",
+              "clip-vit-large-patch14.safetensors",
+              "clip_g.safetensors",
+              "clip_l.safetensors",
+              "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+              "gemma4_e2b_it_bf16.safetensors",
+              "gemma_3_12B_it_fp8_e4m3fn.safetensors",
+              "ltx-2.3-22b-distilled_embeddings_connectors.safetensors",
+              "ltx-2.3-22b_embeddings_connector.safetensors",
+              "ltx-2.3_text_projection_bf16.safetensors",
+              "nsfw_wan_umt5-xxl_fp8_scaled.safetensors",
+              "qwen3vl_4b_fp8_scaled.safetensors",
+              "qwen\\qwen_4b_ace15.safetensors",
+              "qwen_3_4b.safetensors",
+              "qwen_3_8b_fp8mixed.safetensors",
+              "t5xxl_fp16.safetensors",
+              "t5xxl_fp8_e4m3fn.safetensors",
+              "umt5-xxl-enc-fp8_e4m3fn.safetensors"
+            ]
+          }
+        ],
+        "ckpt_name": [
+          "COMBO",
+          {
+            "multiselect": false,
+            "options": [
+              "10Eros_v1_int8_ConvRot.safetensors",
+              "Flux_NSFW_v40.safetensors",
+              "RealVisXL_V5.0_fp16.safetensors",
+              "SD15\\lazymixRealAmateur_v40Inpainting.safetensors",
+              "SDXL\\hephaistosNextgen_v10ExperimentalBF16.safetensors",
+              "SDXL\\sd_xl_base_1.0.safetensors",
+              "SDXL\\sd_xl_refiner_1.0.safetensors",
+              "SDXL\\sd_xl_turbo_1.0_fp16.safetensors",
+              "fenris_xl.safetensors",
+              "flux-2-klein-4b.safetensors",
+              "flux1-dev-bnb-nf4-v2.safetensors",
+              "flux1-schnell-fp8.safetensors",
+              "flux2Klein_9b.safetensors",
+              "fluxFillFP8_v10.safetensors",
+              "fluxKreaDevNsfwFp8_v10.safetensors",
+              "halcyonSDXL_v17.safetensors",
+              "hunyuan3d-dit-v2-mv_fp16.safetensors",
+              "hunyuan_3d_v2.1.safetensors",
+              "idea\\ideogram4_fp8_scaled.safetensors",
+              "idea\\ideogram4_unconditional_fp8_scaled.safetensors",
+              "ideogram4_fp8_scaled.safetensors",
+              "ideogram4_unconditional_fp8_scaled.safetensors",
+              "sam3.1_multiplex_fp16.safetensors",
+              "z-image-turbo-fp8-aio.safetensors"
+            ]
+          }
+        ],
+        "device": [
+          "COMBO",
+          {
+            "advanced": true,
+            "multiselect": false,
+            "options": [
+              "default",
+              "cpu"
+            ]
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "text_encoder",
+        "ckpt_name",
+        "device"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "CLIP"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "CLIP"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXAVTextEncoderLoader",
+    "display_name": "Load LTXV Audio Text Encoder",
+    "description": "Recipes:\nltxav: gemma 3 12B",
+    "python_module": "comfy_extras.nodes_lt_audio",
+    "category": "model/loaders",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "CLIPTextEncode": {
+    "input": {
+      "required": {
+        "text": [
+          "STRING",
+          {
+            "multiline": true,
+            "dynamicPrompts": true,
+            "tooltip": "The text to be encoded."
+          }
+        ],
+        "clip": [
+          "CLIP",
+          {
+            "tooltip": "The CLIP model used for encoding the text."
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "text",
+        "clip"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "CONDITIONING"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "CONDITIONING"
+    ],
+    "name": "CLIPTextEncode",
+    "display_name": "CLIP Text Encode (Prompt)",
+    "description": "Encodes a text prompt using a CLIP model into an embedding that can be used to guide the diffusion model towards generating specific images.",
+    "python_module": "nodes",
+    "category": "model/conditioning",
+    "output_node": false,
+    "has_intermediate_output": false,
+    "output_tooltips": [
+      "A conditioning containing the embedded text used to guide the diffusion model."
+    ],
+    "search_aliases": [
+      "text",
+      "prompt",
+      "text prompt",
+      "positive prompt",
+      "negative prompt",
+      "encode text",
+      "text encoder",
+      "encode prompt"
+    ]
+  },
+  "GemmaAPITextEncode": {
+    "input": {
+      "required": {
+        "api_key": [
+          "STRING",
+          {
+            "default": "",
+            "placeholder": "API_KEY",
+            "multiline": false,
+            "tooltip": "API key for authentication"
+          }
+        ],
+        "prompt": [
+          "STRING",
+          {
+            "multiline": true,
+            "default": "",
+            "tooltip": "Text prompt to encode"
+          }
+        ],
+        "enhance_prompt": [
+          "BOOLEAN",
+          {
+            "default": true,
+            "tooltip": "When enabled, the prompt is enhanced using Gemma 3 before encoding"
+          }
+        ],
+        "ckpt_name": [
+          [
+            "10Eros_v1_int8_ConvRot.safetensors",
+            "Flux_NSFW_v40.safetensors",
+            "RealVisXL_V5.0_fp16.safetensors",
+            "SD15\\lazymixRealAmateur_v40Inpainting.safetensors",
+            "SDXL\\hephaistosNextgen_v10ExperimentalBF16.safetensors",
+            "SDXL\\sd_xl_base_1.0.safetensors",
+            "SDXL\\sd_xl_refiner_1.0.safetensors",
+            "SDXL\\sd_xl_turbo_1.0_fp16.safetensors",
+            "fenris_xl.safetensors",
+            "flux-2-klein-4b.safetensors",
+            "flux1-dev-bnb-nf4-v2.safetensors",
+            "flux1-schnell-fp8.safetensors",
+            "flux2Klein_9b.safetensors",
+            "fluxFillFP8_v10.safetensors",
+            "fluxKreaDevNsfwFp8_v10.safetensors",
+            "halcyonSDXL_v17.safetensors",
+            "hunyuan3d-dit-v2-mv_fp16.safetensors",
+            "hunyuan_3d_v2.1.safetensors",
+            "idea\\ideogram4_fp8_scaled.safetensors",
+            "idea\\ideogram4_unconditional_fp8_scaled.safetensors",
+            "ideogram4_fp8_scaled.safetensors",
+            "ideogram4_unconditional_fp8_scaled.safetensors",
+            "sam3.1_multiplex_fp16.safetensors",
+            "z-image-turbo-fp8-aio.safetensors",
+            "MelBandRoformer_fp16.safetensors",
+            "MelBandRoformer_fp32.safetensors",
+            "krea2_turbo_fp8\\krea2_turbo_fp8.safetensors",
+            "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+            "wan\\idea\\ideogram4_fp8_scaled.safetensors",
+            "wan\\idea\\ideogram4_unconditional_fp8_scaled.safetensors",
+            "wan\\ideogram4_fp8_scaled.safetensors",
+            "wan\\ideogram4_unconditional_fp8_scaled.safetensors",
+            "wan\\sam3.1_multiplex_fp16.safetensors"
+          ],
+          {
+            "tooltip": "The model to read the API model id from. Either a checkpoint or a diffusion model; it must carry the model id in its safetensors metadata."
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "api_key",
+        "prompt",
+        "enhance_prompt",
+        "ckpt_name"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "CONDITIONING"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "conditioning"
+    ],
+    "name": "GemmaAPITextEncode",
+    "display_name": "🅛🅣🅧 Gemma API Text Encode",
+    "description": "",
+    "python_module": "custom_nodes.comfyui-workflow-encrypt",
+    "category": "api node/text/Lightricks",
+    "output_node": false,
+    "has_intermediate_output": false,
+    "search_aliases": []
+  },
+  "LTXVConditioning": {
+    "input": {
+      "required": {
+        "positive": [
+          "CONDITIONING",
+          {}
+        ],
+        "negative": [
+          "CONDITIONING",
+          {}
+        ],
+        "frame_rate": [
+          "FLOAT",
+          {
+            "default": 25.0,
+            "min": 0.0,
+            "max": 1000.0,
+            "step": 0.01
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "positive",
+        "negative",
+        "frame_rate"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "CONDITIONING",
+      "CONDITIONING"
+    ],
+    "output_is_list": [
+      false,
+      false
+    ],
+    "output_name": [
+      "positive",
+      "negative"
+    ],
+    "output_tooltips": [
+      null,
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXVConditioning",
+    "display_name": null,
+    "description": "",
+    "python_module": "comfy_extras.nodes_lt",
+    "category": "model/conditioning/ltxv",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVImgToVideoConditionOnly": {
+    "input": {
+      "required": {
+        "vae": [
+          "VAE"
+        ],
+        "image": [
+          "IMAGE"
+        ],
+        "latent": [
+          "LATENT"
+        ],
+        "strength": [
+          "FLOAT",
+          {
+            "default": 1.0,
+            "min": 0.0,
+            "max": 1.0
+          }
+        ]
+      },
+      "optional": {
+        "bypass": [
+          "BOOLEAN",
+          {
+            "default": false,
+            "tooltip": "Bypass the conditioning."
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "vae",
+        "image",
+        "latent",
+        "strength"
+      ],
+      "optional": [
+        "bypass"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "latent"
+    ],
+    "name": "LTXVImgToVideoConditionOnly",
+    "display_name": "🅛🅣🅧 LTXV Img To Video Condition Only",
+    "description": "Applies image conditioning to the first frames of an existing latent. Creates a noise mask to control conditioning strength.",
+    "python_module": "custom_nodes.comfyui-workflow-encrypt",
+    "category": "conditioning/video_models",
+    "output_node": false,
+    "has_intermediate_output": false,
+    "search_aliases": []
+  },
+  "EmptyLTXVLatentVideo": {
+    "input": {
+      "required": {
+        "width": [
+          "INT",
+          {
+            "default": 768,
+            "min": 64,
+            "max": 16384,
+            "step": 32
+          }
+        ],
+        "height": [
+          "INT",
+          {
+            "default": 512,
+            "min": 64,
+            "max": 16384,
+            "step": 32
+          }
+        ],
+        "length": [
+          "INT",
+          {
+            "default": 97,
+            "min": 1,
+            "max": 16384,
+            "step": 8
+          }
+        ],
+        "batch_size": [
+          "INT",
+          {
+            "default": 1,
+            "min": 1,
+            "max": 4096
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "width",
+        "height",
+        "length",
+        "batch_size"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "LATENT"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "EmptyLTXVLatentVideo",
+    "display_name": null,
+    "description": "",
+    "python_module": "comfy_extras.nodes_lt",
+    "category": "model/latent/ltxv",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVEmptyLatentAudio": {
+    "input": {
+      "required": {
+        "frames_number": [
+          "INT",
+          {
+            "tooltip": "Number of frames.",
+            "default": 97,
+            "min": 1,
+            "max": 1000,
+            "step": 1,
+            "display": "number"
+          }
+        ],
+        "frame_rate": [
+          "FLOAT,INT",
+          {
+            "tooltip": "Number of frames per second.",
+            "default": 25.0,
+            "widgetType": "FLOAT",
+            "min": 1.0,
+            "max": 1000.0,
+            "step": 0.01,
+            "display": "number"
+          }
+        ],
+        "batch_size": [
+          "INT",
+          {
+            "tooltip": "The number of latent audio samples in the batch.",
+            "default": 1,
+            "min": 1,
+            "max": 4096,
+            "display": "number"
+          }
+        ],
+        "audio_vae": [
+          "VAE",
+          {
+            "display_name": "Audio VAE",
+            "tooltip": "The Audio VAE model to get configuration from."
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "frames_number",
+        "frame_rate",
+        "batch_size",
+        "audio_vae"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "Latent"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXVEmptyLatentAudio",
+    "display_name": "LTXV Empty Latent Audio",
+    "description": "",
+    "python_module": "comfy_extras.nodes_lt_audio",
+    "category": "model/latent/ltxv",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVAudioVAELoader": {
+    "input": {
+      "required": {
+        "ckpt_name": [
+          "COMBO",
+          {
+            "tooltip": "Audio VAE checkpoint to load.",
+            "multiselect": false,
+            "options": [
+              "10Eros_v1_int8_ConvRot.safetensors",
+              "Flux_NSFW_v40.safetensors",
+              "RealVisXL_V5.0_fp16.safetensors",
+              "SD15\\lazymixRealAmateur_v40Inpainting.safetensors",
+              "SDXL\\hephaistosNextgen_v10ExperimentalBF16.safetensors",
+              "SDXL\\sd_xl_base_1.0.safetensors",
+              "SDXL\\sd_xl_refiner_1.0.safetensors",
+              "SDXL\\sd_xl_turbo_1.0_fp16.safetensors",
+              "fenris_xl.safetensors",
+              "flux-2-klein-4b.safetensors",
+              "flux1-dev-bnb-nf4-v2.safetensors",
+              "flux1-schnell-fp8.safetensors",
+              "flux2Klein_9b.safetensors",
+              "fluxFillFP8_v10.safetensors",
+              "fluxKreaDevNsfwFp8_v10.safetensors",
+              "halcyonSDXL_v17.safetensors",
+              "hunyuan3d-dit-v2-mv_fp16.safetensors",
+              "hunyuan_3d_v2.1.safetensors",
+              "idea\\ideogram4_fp8_scaled.safetensors",
+              "idea\\ideogram4_unconditional_fp8_scaled.safetensors",
+              "ideogram4_fp8_scaled.safetensors",
+              "ideogram4_unconditional_fp8_scaled.safetensors",
+              "sam3.1_multiplex_fp16.safetensors",
+              "z-image-turbo-fp8-aio.safetensors"
+            ]
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "ckpt_name"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "VAE"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "Audio VAE"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXVAudioVAELoader",
+    "display_name": "Load LTXV Audio VAE",
+    "description": "",
+    "python_module": "comfy_extras.nodes_lt_audio",
+    "category": "model/loaders",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVAudioVAEEncode": {
+    "input": {
+      "required": {
+        "audio": [
+          "AUDIO",
+          {
+            "tooltip": "The audio to be encoded."
+          }
+        ],
+        "audio_vae": [
+          "VAE",
+          {
+            "display_name": "Audio VAE",
+            "tooltip": "The Audio VAE model to use for encoding."
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "audio",
+        "audio_vae"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "Audio Latent"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXVAudioVAEEncode",
+    "display_name": "LTXV Audio VAE Encode",
+    "description": "",
+    "python_module": "comfy_extras.nodes_lt_audio",
+    "category": "model/latent/ltxv",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVAudioVAEDecode": {
+    "input": {
+      "required": {
+        "samples": [
+          "LATENT",
+          {
+            "tooltip": "The latent to be decoded."
+          }
+        ],
+        "audio_vae": [
+          "VAE",
+          {
+            "display_name": "Audio VAE",
+            "tooltip": "The Audio VAE model used for decoding the latent."
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "samples",
+        "audio_vae"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "AUDIO"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "Audio"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXVAudioVAEDecode",
+    "display_name": "LTXV Audio VAE Decode",
+    "description": "",
+    "python_module": "comfy_extras.nodes_lt_audio",
+    "category": "model/latent/ltxv",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVConcatAVLatent": {
+    "input": {
+      "required": {
+        "video_latent": [
+          "LATENT",
+          {}
+        ],
+        "audio_latent": [
+          "LATENT",
+          {}
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "video_latent",
+        "audio_latent"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "latent"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXVConcatAVLatent",
+    "display_name": "Concat AV Latent",
+    "description": "Merge a video latent and an audio latent into a joint AV latent (any AV model, e.g. LTXV or MiniMax H3).",
+    "python_module": "comfy_extras.nodes_lt",
+    "category": "model/latent/ltxv",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVSeparateAVLatent": {
+    "input": {
+      "required": {
+        "av_latent": [
+          "LATENT",
+          {}
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "av_latent"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT",
+      "LATENT"
+    ],
+    "output_is_list": [
+      false,
+      false
+    ],
+    "output_name": [
+      "video_latent",
+      "audio_latent"
+    ],
+    "output_tooltips": [
+      null,
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXVSeparateAVLatent",
+    "display_name": "Separate AV Latent",
+    "description": "Split a joint AV latent into its video and audio latents (any AV model, e.g. LTXV or MiniMax H3).",
+    "python_module": "comfy_extras.nodes_lt",
+    "category": "model/latent/ltxv",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "RandomNoise": {
+    "input": {
+      "required": {
+        "noise_seed": [
+          "INT",
+          {
+            "default": 0,
+            "min": 0,
+            "max": 18446744073709551615,
+            "control_after_generate": true
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "noise_seed"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "NOISE"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "NOISE"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "RandomNoise",
+    "display_name": null,
+    "description": "",
+    "python_module": "comfy_extras.nodes_custom_sampler",
+    "category": "model/sampling/noise",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "ManualSigmas": {
+    "input": {
+      "required": {
+        "sigmas": [
+          "STRING",
+          {
+            "default": "1, 0.5",
+            "multiline": false
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "sigmas"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "SIGMAS"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "SIGMAS"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "ManualSigmas",
+    "display_name": null,
+    "description": "",
+    "python_module": "comfy_extras.nodes_custom_sampler",
+    "category": "model/sampling/sigmas",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": true,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": [
+      "custom noise schedule",
+      "define sigmas"
+    ],
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "BasicScheduler": {
+    "input": {
+      "required": {
+        "model": [
+          "MODEL",
+          {}
+        ],
+        "scheduler": [
+          "COMBO",
+          {
+            "multiselect": false,
+            "options": [
+              "simple",
+              "sgm_uniform",
+              "karras",
+              "exponential",
+              "ddim_uniform",
+              "beta",
+              "normal",
+              "linear_quadratic",
+              "kl_optimal",
+              "bong_tangent",
+              "beta57"
+            ]
+          }
+        ],
+        "steps": [
+          "INT",
+          {
+            "default": 20,
+            "min": 1,
+            "max": 10000
+          }
+        ],
+        "denoise": [
+          "FLOAT",
+          {
+            "default": 1.0,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "model",
+        "scheduler",
+        "steps",
+        "denoise"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "SIGMAS"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "SIGMAS"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "BasicScheduler",
+    "display_name": null,
+    "description": "",
+    "python_module": "comfy_extras.nodes_custom_sampler",
+    "category": "model/sampling/schedulers",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVScheduler": {
+    "input": {
+      "required": {
+        "steps": [
+          "INT",
+          {
+            "default": 20,
+            "min": 1,
+            "max": 10000
+          }
+        ],
+        "max_shift": [
+          "FLOAT",
+          {
+            "default": 2.05,
+            "min": 0.0,
+            "max": 100.0,
+            "step": 0.01
+          }
+        ],
+        "base_shift": [
+          "FLOAT",
+          {
+            "default": 0.95,
+            "min": 0.0,
+            "max": 100.0,
+            "step": 0.01
+          }
+        ],
+        "stretch": [
+          "BOOLEAN",
+          {
+            "tooltip": "Stretch the sigmas to be in the range [terminal, 1].",
+            "advanced": true,
+            "default": true
+          }
+        ],
+        "terminal": [
+          "FLOAT",
+          {
+            "tooltip": "The terminal value of the sigmas after stretching.",
+            "advanced": true,
+            "default": 0.1,
+            "min": 0.0,
+            "max": 0.99,
+            "step": 0.01
+          }
+        ]
+      },
+      "optional": {
+        "latent": [
+          "LATENT",
+          {}
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "steps",
+        "max_shift",
+        "base_shift",
+        "stretch",
+        "terminal"
+      ],
+      "optional": [
+        "latent"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "SIGMAS"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "SIGMAS"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXVScheduler",
+    "display_name": null,
+    "description": "",
+    "python_module": "comfy_extras.nodes_lt",
+    "category": "model/sampling/schedulers",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "CFGGuider": {
+    "input": {
+      "required": {
+        "model": [
+          "MODEL",
+          {}
+        ],
+        "positive": [
+          "CONDITIONING",
+          {}
+        ],
+        "negative": [
+          "CONDITIONING",
+          {}
+        ],
+        "cfg": [
+          "FLOAT",
+          {
+            "default": 8.0,
+            "min": 0.0,
+            "max": 100.0,
+            "step": 0.1,
+            "round": 0.01
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "model",
+        "positive",
+        "negative",
+        "cfg"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "GUIDER"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "GUIDER"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "CFGGuider",
+    "display_name": "CFG Guider",
+    "description": "",
+    "python_module": "comfy_extras.nodes_custom_sampler",
+    "category": "model/sampling/guiders",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "KSamplerSelect": {
+    "input": {
+      "required": {
+        "sampler_name": [
+          "COMBO",
+          {
+            "multiselect": false,
+            "options": [
+              "euler",
+              "euler_cfg_pp",
+              "euler_ancestral",
+              "euler_ancestral_cfg_pp",
+              "heun",
+              "heunpp2",
+              "exp_heun_2_x0",
+              "exp_heun_2_x0_sde",
+              "dpm_2",
+              "dpm_2_ancestral",
+              "lms",
+              "dpm_fast",
+              "dpm_adaptive",
+              "dpmpp_2s_ancestral",
+              "dpmpp_2s_ancestral_cfg_pp",
+              "dpmpp_sde",
+              "dpmpp_sde_gpu",
+              "dpmpp_2m",
+              "dpmpp_2m_cfg_pp",
+              "dpmpp_2m_sde",
+              "dpmpp_2m_sde_gpu",
+              "dpmpp_2m_sde_heun",
+              "dpmpp_2m_sde_heun_gpu",
+              "dpmpp_3m_sde",
+              "dpmpp_3m_sde_gpu",
+              "ddpm",
+              "lcm",
+              "ipndm",
+              "ipndm_v",
+              "deis",
+              "res_multistep",
+              "res_multistep_cfg_pp",
+              "res_multistep_ancestral",
+              "res_multistep_ancestral_cfg_pp",
+              "gradient_estimation",
+              "gradient_estimation_cfg_pp",
+              "er_sde",
+              "seeds_2",
+              "seeds_3",
+              "sa_solver",
+              "sa_solver_pece",
+              "ddim",
+              "uni_pc",
+              "uni_pc_bh2",
+              "legacy_rk",
+              "rk",
+              "rk_beta",
+              "deis_3m_ode",
+              "deis_2m_ode",
+              "deis_3m",
+              "deis_2m",
+              "res_6s_ode",
+              "res_5s_ode",
+              "res_3s_ode",
+              "res_2s_ode",
+              "res_3m_ode",
+              "res_2m_ode",
+              "res_6s",
+              "res_5s",
+              "res_3s",
+              "res_2s",
+              "res_3m",
+              "res_2m"
+            ]
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "sampler_name"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "SAMPLER"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "SAMPLER"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "KSamplerSelect",
+    "display_name": null,
+    "description": "",
+    "python_module": "comfy_extras.nodes_custom_sampler",
+    "category": "model/sampling/samplers",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "SamplerCustomAdvanced": {
+    "input": {
+      "required": {
+        "noise": [
+          "NOISE",
+          {}
+        ],
+        "guider": [
+          "GUIDER",
+          {}
+        ],
+        "sampler": [
+          "SAMPLER",
+          {}
+        ],
+        "sigmas": [
+          "SIGMAS",
+          {}
+        ],
+        "latent_image": [
+          "LATENT",
+          {}
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "noise",
+        "guider",
+        "sampler",
+        "sigmas",
+        "latent_image"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT",
+      "LATENT"
+    ],
+    "output_is_list": [
+      false,
+      false
+    ],
+    "output_name": [
+      "output",
+      "denoised_output"
+    ],
+    "output_tooltips": [
+      null,
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "SamplerCustomAdvanced",
+    "display_name": null,
+    "description": "",
+    "python_module": "comfy_extras.nodes_custom_sampler",
+    "category": "model/sampling/custom",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVLatentUpsampler": {
+    "input": {
+      "required": {
+        "samples": [
+          "LATENT",
+          {}
+        ],
+        "upscale_model": [
+          "LATENT_UPSCALE_MODEL",
+          {}
+        ],
+        "vae": [
+          "VAE",
+          {}
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "samples",
+        "upscale_model",
+        "vae"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "LATENT"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LTXVLatentUpsampler",
+    "display_name": null,
+    "description": "",
+    "python_module": "comfy_extras.nodes_lt_upsampler",
+    "category": "model/latent/ltxv",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": true,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LatentUpscaleModelLoader": {
+    "input": {
+      "required": {
+        "model_name": [
+          "COMBO",
+          {
+            "multiselect": false,
+            "options": [
+              "ltx-2-spatial-upscaler-x2-1.0.safetensors",
+              "ltx-2-temporal-upscaler-x2-1.0.safetensors",
+              "ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+              "ltx-2.3-temporal-upscaler-x2-1.0.safetensors",
+              "ltx-2.5-22b-ic-lora-pixel-spatial-upscaler-x2-1.0.safetensors",
+              "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors\\diffusion_pytorch_model.safetensors",
+              "ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0.safetensors",
+              "ltx-2.5-temporal-upscaler-x2-1.0.safetensors",
+              "ltxv_0.9.7_spatial_upscaler.safetensors"
+            ]
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "model_name"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT_UPSCALE_MODEL"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "LATENT_UPSCALE_MODEL"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "LatentUpscaleModelLoader",
+    "display_name": "Load Latent Upscale Model",
+    "description": "",
+    "python_module": "comfy_extras.nodes_hunyuan",
+    "category": "model/loaders",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": null,
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXVTiledVAEDecode": {
+    "input": {
+      "required": {
+        "vae": [
+          "VAE"
+        ],
+        "latents": [
+          "LATENT"
+        ],
+        "horizontal_tiles": [
+          "INT",
+          {
+            "default": 1,
+            "min": 1,
+            "max": 6
+          }
+        ],
+        "vertical_tiles": [
+          "INT",
+          {
+            "default": 1,
+            "min": 1,
+            "max": 6
+          }
+        ],
+        "overlap": [
+          "INT",
+          {
+            "default": 1,
+            "min": 1,
+            "max": 8
+          }
+        ],
+        "last_frame_fix": [
+          "BOOLEAN",
+          {
+            "default": false
+          }
+        ]
+      },
+      "optional": {
+        "working_device": [
+          [
+            "cpu",
+            "auto"
+          ],
+          {
+            "default": "auto"
+          }
+        ],
+        "working_dtype": [
+          [
+            "float16",
+            "float32",
+            "auto"
+          ],
+          {
+            "default": "auto"
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "vae",
+        "latents",
+        "horizontal_tiles",
+        "vertical_tiles",
+        "overlap",
+        "last_frame_fix"
+      ],
+      "optional": [
+        "working_device",
+        "working_dtype"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "IMAGE"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "image"
+    ],
+    "name": "LTXVTiledVAEDecode",
+    "display_name": "🅛🅣🅧 LTXV Tiled VAE Decode",
+    "description": "",
+    "python_module": "custom_nodes.comfyui-workflow-encrypt",
+    "category": "latent",
+    "output_node": false,
+    "has_intermediate_output": false,
+    "search_aliases": []
+  },
+  "VAEDecodeTiled": {
+    "input": {
+      "required": {
+        "samples": [
+          "LATENT"
+        ],
+        "vae": [
+          "VAE"
+        ],
+        "tile_size": [
+          "INT",
+          {
+            "default": 512,
+            "min": 64,
+            "max": 4096,
+            "step": 32,
+            "advanced": true
+          }
+        ],
+        "overlap": [
+          "INT",
+          {
+            "default": 64,
+            "min": 0,
+            "max": 4096,
+            "step": 32,
+            "advanced": true
+          }
+        ],
+        "temporal_size": [
+          "INT",
+          {
+            "default": 64,
+            "min": 8,
+            "max": 4096,
+            "step": 4,
+            "tooltip": "Only used for video VAEs: Amount of frames to decode at a time.",
+            "advanced": true
+          }
+        ],
+        "temporal_overlap": [
+          "INT",
+          {
+            "default": 8,
+            "min": 4,
+            "max": 4096,
+            "step": 4,
+            "tooltip": "Only used for video VAEs: Amount of frames to overlap.",
+            "advanced": true
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "samples",
+        "vae",
+        "tile_size",
+        "overlap",
+        "temporal_size",
+        "temporal_overlap"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "IMAGE"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "IMAGE"
+    ],
+    "name": "VAEDecodeTiled",
+    "display_name": "VAE Decode (Tiled)",
+    "description": "",
+    "python_module": "nodes",
+    "category": "model/latent",
+    "output_node": false,
+    "has_intermediate_output": false,
+    "search_aliases": []
+  },
+  "VAEEncodeTiled": {
+    "input": {
+      "required": {
+        "pixels": [
+          "IMAGE"
+        ],
+        "vae": [
+          "VAE"
+        ],
+        "tile_size": [
+          "INT",
+          {
+            "default": 512,
+            "min": 64,
+            "max": 4096,
+            "step": 64,
+            "advanced": true
+          }
+        ],
+        "overlap": [
+          "INT",
+          {
+            "default": 64,
+            "min": 0,
+            "max": 4096,
+            "step": 32,
+            "advanced": true
+          }
+        ],
+        "temporal_size": [
+          "INT",
+          {
+            "default": 64,
+            "min": 8,
+            "max": 4096,
+            "step": 4,
+            "tooltip": "Only used for video VAEs: Amount of frames to encode at a time.",
+            "advanced": true
+          }
+        ],
+        "temporal_overlap": [
+          "INT",
+          {
+            "default": 8,
+            "min": 4,
+            "max": 4096,
+            "step": 4,
+            "tooltip": "Only used for video VAEs: Amount of frames to overlap.",
+            "advanced": true
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "pixels",
+        "vae",
+        "tile_size",
+        "overlap",
+        "temporal_size",
+        "temporal_overlap"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "LATENT"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "LATENT"
+    ],
+    "name": "VAEEncodeTiled",
+    "display_name": "VAE Encode (Tiled)",
+    "description": "",
+    "python_module": "nodes",
+    "category": "model/latent",
+    "output_node": false,
+    "has_intermediate_output": false,
+    "search_aliases": []
+  },
+  "CreateVideo": {
+    "input": {
+      "required": {
+        "images": [
+          "IMAGE",
+          {
+            "tooltip": "The images to create a video from."
+          }
+        ],
+        "fps": [
+          "FLOAT",
+          {
+            "default": 30.0,
+            "min": 1.0,
+            "max": 120.0,
+            "step": 1.0
+          }
+        ]
+      },
+      "optional": {
+        "audio": [
+          "AUDIO",
+          {
+            "tooltip": "The audio to add to the video."
+          }
+        ],
+        "bit_depth": [
+          "INT",
+          {
+            "tooltip": "Bit depth of the created video. 10-bit keeps smoother gradients with less banding, but some players and downstream nodes may not support it.",
+            "default": 8,
+            "min": 8,
+            "max": 10,
+            "step": 2,
+            "display": "number"
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "images",
+        "fps"
+      ],
+      "optional": [
+        "audio",
+        "bit_depth"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "VIDEO"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "VIDEO"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "CreateVideo",
+    "display_name": "Create Video",
+    "description": "Create a video from images.",
+    "python_module": "comfy_extras.nodes_video",
+    "category": "video",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": [
+      "images to video"
+    ],
+    "essentials_category": "Video Tools",
+    "has_intermediate_output": false
+  },
+  "SaveVideo": {
+    "input": {
+      "required": {
+        "video": [
+          "VIDEO",
+          {
+            "tooltip": "The video to save."
+          }
+        ],
+        "filename_prefix": [
+          "STRING",
+          {
+            "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes.",
+            "default": "video/ComfyUI",
+            "multiline": false
+          }
+        ],
+        "format": [
+          "COMBO",
+          {
+            "tooltip": "The format to save the video as.",
+            "default": "auto",
+            "multiselect": false,
+            "options": [
+              "auto",
+              "mp4"
+            ]
+          }
+        ],
+        "codec": [
+          "COMFY_DYNAMICCOMBO_V3",
+          {
+            "tooltip": "The codec to use for the video.",
+            "options": [
+              {
+                "key": "auto",
+                "inputs": {
+                  "required": {}
+                }
+              },
+              {
+                "key": "h264",
+                "inputs": {
+                  "required": {},
+                  "optional": {
+                    "encoding": [
+                      "COMFY_DYNAMICCOMBO_V3",
+                      {
+                        "display_name": "encoding mode",
+                        "tooltip": "Automatic preserves compatible H.264 streams. Re-encode applies a custom CRF.",
+                        "options": [
+                          {
+                            "key": "auto",
+                            "inputs": {
+                              "required": {}
+                            }
+                          },
+                          {
+                            "key": "re-encode",
+                            "inputs": {
+                              "required": {
+                                "crf": [
+                                  "FLOAT",
+                                  {
+                                    "tooltip": "Lower values produce higher quality and larger files.",
+                                    "default": 23.0,
+                                    "min": 0.0,
+                                    "max": 51.0,
+                                    "step": 1.0
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "hidden": {
+        "prompt": [
+          "PROMPT"
+        ],
+        "extra_pnginfo": [
+          "EXTRA_PNGINFO"
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "video",
+        "filename_prefix",
+        "format",
+        "codec"
+      ],
+      "hidden": [
+        "prompt",
+        "extra_pnginfo"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "VIDEO"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "video"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "SaveVideo",
+    "display_name": "Save Video",
+    "description": "Saves the input videos to your ComfyUI output directory.",
+    "python_module": "comfy_extras.nodes_video",
+    "category": "video",
+    "output_node": true,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": [
+      "export video"
+    ],
+    "essentials_category": "Basics",
+    "has_intermediate_output": false
+  },
+  "VHS_VideoCombine": {
+    "input": {
+      "required": {
+        "images": [
+          "IMAGE"
+        ],
+        "frame_rate": [
+          "FLOAT",
+          {
+            "default": 8,
+            "min": 1,
+            "step": 1
+          }
+        ],
+        "loop_count": [
+          "INT",
+          {
+            "default": 0,
+            "min": 0,
+            "max": 100,
+            "step": 1
+          }
+        ],
+        "filename_prefix": [
+          "STRING",
+          {
+            "default": "AnimateDiff"
+          }
+        ],
+        "format": [
+          [
+            "image/gif",
+            "image/webp",
+            "video/koolook-ASTRA-h264.json",
+            "video/koolook-ProRes.json",
+            "video/16bit-png",
+            "video/8bit-png",
+            "video/av1-webm",
+            "video/ffmpeg-gif",
+            "video/ffv1-mkv",
+            "video/h264-mp4",
+            "video/h265-mp4",
+            "video/nvenc_av1-mp4",
+            "video/nvenc_h264-mp4",
+            "video/nvenc_hevc-mp4",
+            "video/ProRes",
+            "video/webm"
+          ],
+          {
+            "formats": {
+              "video/koolook-ASTRA-h264.json": [
+                [
+                  "pix_fmt",
+                  [
+                    "yuv420p10le",
+                    "yuv420p"
+                  ],
+                  {
+                    "default": "yuv420p10le"
+                  }
+                ],
+                [
+                  "crf",
+                  "INT",
+                  {
+                    "default": 5,
+                    "min": 0,
+                    "max": 100,
+                    "step": 1
+                  }
+                ],
+                [
+                  "save_metadata",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ],
+                [
+                  "trim_to_audio",
+                  "BOOLEAN",
+                  {
+                    "default": false
+                  }
+                ]
+              ],
+              "video/koolook-ProRes.json": [
+                [
+                  "profile",
+                  [
+                    "lt",
+                    "standard",
+                    "hq",
+                    "4444",
+                    "4444xq"
+                  ],
+                  {
+                    "default": "hq"
+                  }
+                ]
+              ],
+              "video/av1-webm": [
+                [
+                  "pix_fmt",
+                  [
+                    "yuv420p10le",
+                    "yuv420p"
+                  ]
+                ],
+                [
+                  "crf",
+                  "INT",
+                  {
+                    "default": 23,
+                    "min": 0,
+                    "max": 100,
+                    "step": 1
+                  }
+                ],
+                [
+                  "input_color_depth",
+                  [
+                    "8bit",
+                    "16bit"
+                  ]
+                ],
+                [
+                  "save_metadata",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ]
+              ],
+              "video/ffmpeg-gif": [
+                [
+                  "dither",
+                  [
+                    "bayer",
+                    "heckbert",
+                    "floyd_steinberg",
+                    "sierra2",
+                    "sierra2_4a",
+                    "sierra3",
+                    "burkes",
+                    "atkinson",
+                    "none"
+                  ],
+                  {
+                    "default": "sierra2_4a"
+                  },
+                  "[0:v] split [a][b]; [a] palettegen=reserve_transparent=on:transparency_color=ffffff [p]; [b][p] paletteuse=dither=$val"
+                ]
+              ],
+              "video/ffv1-mkv": [
+                [
+                  "level",
+                  [
+                    "0",
+                    "1",
+                    "3"
+                  ],
+                  {
+                    "default": "3"
+                  }
+                ],
+                [
+                  "coder",
+                  [
+                    "0",
+                    "1",
+                    "2"
+                  ],
+                  {
+                    "default": "1"
+                  }
+                ],
+                [
+                  "context",
+                  [
+                    "0",
+                    "1"
+                  ],
+                  {
+                    "default": "1"
+                  }
+                ],
+                [
+                  "gop_size",
+                  "INT",
+                  {
+                    "default": 1,
+                    "min": 1,
+                    "max": 300,
+                    "step": 1
+                  }
+                ],
+                [
+                  "slices",
+                  [
+                    "4",
+                    "6",
+                    "9",
+                    "12",
+                    "16",
+                    "20",
+                    "24",
+                    "30"
+                  ],
+                  {
+                    "default": "16"
+                  }
+                ],
+                [
+                  "slicecrc",
+                  [
+                    "0",
+                    "1"
+                  ],
+                  {
+                    "default": "1"
+                  }
+                ],
+                [
+                  "pix_fmt",
+                  [
+                    "rgba64le",
+                    "bgra",
+                    "yuv420p",
+                    "yuv422p",
+                    "yuv444p",
+                    "yuva420p",
+                    "yuva422p",
+                    "yuva444p",
+                    "yuv420p10le",
+                    "yuv422p10le",
+                    "yuv444p10le",
+                    "yuv420p12le",
+                    "yuv422p12le",
+                    "yuv444p12le",
+                    "yuv420p14le",
+                    "yuv422p14le",
+                    "yuv444p14le",
+                    "yuv420p16le",
+                    "yuv422p16le",
+                    "yuv444p16le",
+                    "gray",
+                    "gray10le",
+                    "gray12le",
+                    "gray16le"
+                  ],
+                  {
+                    "default": "rgba64le"
+                  }
+                ],
+                [
+                  "save_metadata",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ],
+                [
+                  "trim_to_audio",
+                  "BOOLEAN",
+                  {
+                    "default": false
+                  }
+                ]
+              ],
+              "video/h264-mp4": [
+                [
+                  "pix_fmt",
+                  [
+                    "yuv420p",
+                    "yuv420p10le"
+                  ]
+                ],
+                [
+                  "crf",
+                  "INT",
+                  {
+                    "default": 19,
+                    "min": 0,
+                    "max": 100,
+                    "step": 1
+                  }
+                ],
+                [
+                  "save_metadata",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ],
+                [
+                  "trim_to_audio",
+                  "BOOLEAN",
+                  {
+                    "default": false
+                  }
+                ]
+              ],
+              "video/h265-mp4": [
+                [
+                  "pix_fmt",
+                  [
+                    "yuv420p10le",
+                    "yuv420p"
+                  ]
+                ],
+                [
+                  "crf",
+                  "INT",
+                  {
+                    "default": 22,
+                    "min": 0,
+                    "max": 100,
+                    "step": 1
+                  }
+                ],
+                [
+                  "save_metadata",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ]
+              ],
+              "video/nvenc_av1-mp4": [
+                [
+                  "pix_fmt",
+                  [
+                    "yuv420p",
+                    "p010le"
+                  ]
+                ],
+                [
+                  "bitrate",
+                  "INT",
+                  {
+                    "default": 10,
+                    "min": 1,
+                    "max": 999,
+                    "step": 1
+                  }
+                ],
+                [
+                  "megabit",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ],
+                [
+                  "save_metadata",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ]
+              ],
+              "video/nvenc_h264-mp4": [
+                [
+                  "pix_fmt",
+                  [
+                    "yuv420p",
+                    "p010le"
+                  ]
+                ],
+                [
+                  "bitrate",
+                  "INT",
+                  {
+                    "default": 10,
+                    "min": 1,
+                    "max": 999,
+                    "step": 1
+                  }
+                ],
+                [
+                  "megabit",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ],
+                [
+                  "save_metadata",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ]
+              ],
+              "video/nvenc_hevc-mp4": [
+                [
+                  "pix_fmt",
+                  [
+                    "yuv420p",
+                    "p010le"
+                  ]
+                ],
+                [
+                  "bitrate",
+                  "INT",
+                  {
+                    "default": 10,
+                    "min": 1,
+                    "max": 999,
+                    "step": 1
+                  }
+                ],
+                [
+                  "megabit",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ],
+                [
+                  "save_metadata",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ]
+              ],
+              "video/ProRes": [
+                [
+                  "profile",
+                  [
+                    "lt",
+                    "standard",
+                    "hq",
+                    "4444",
+                    "4444xq"
+                  ],
+                  {
+                    "default": "hq"
+                  }
+                ]
+              ],
+              "video/webm": [
+                [
+                  "pix_fmt",
+                  [
+                    "yuv420p",
+                    "yuva420p"
+                  ]
+                ],
+                [
+                  "crf",
+                  "INT",
+                  {
+                    "default": 20,
+                    "min": 0,
+                    "max": 100,
+                    "step": 1
+                  }
+                ],
+                [
+                  "save_metadata",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ],
+                [
+                  "trim_to_audio",
+                  "BOOLEAN",
+                  {
+                    "default": false
+                  }
+                ]
+              ],
+              "image/webp": [
+                [
+                  "lossless",
+                  "BOOLEAN",
+                  {
+                    "default": true
+                  }
+                ]
+              ]
+            }
+          }
+        ],
+        "pingpong": [
+          "BOOLEAN",
+          {
+            "default": false
+          }
+        ],
+        "save_output": [
+          "BOOLEAN",
+          {
+            "default": true
+          }
+        ]
+      },
+      "optional": {
+        "audio": [
+          "AUDIO"
+        ],
+        "meta_batch": [
+          "VHS_BatchManager"
+        ],
+        "vae": [
+          "VAE"
+        ]
+      },
+      "hidden": {
+        "prompt": "PROMPT",
+        "extra_pnginfo": "EXTRA_PNGINFO",
+        "unique_id": "UNIQUE_ID"
+      }
+    },
+    "input_order": {
+      "required": [
+        "images",
+        "frame_rate",
+        "loop_count",
+        "filename_prefix",
+        "format",
+        "pingpong",
+        "save_output"
+      ],
+      "optional": [
+        "audio",
+        "meta_batch",
+        "vae"
+      ],
+      "hidden": [
+        "prompt",
+        "extra_pnginfo",
+        "unique_id"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "VHS_FILENAMES"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "Filenames"
+    ],
+    "name": "VHS_VideoCombine",
+    "display_name": "Video Combine 🎥🅥🅗🅢",
+    "description": "Video Combine 🎥🅥🅗🅢<div style=\"font-size: 0.8em\"><div id=VHS_shortdesc>Combine an image sequence into a video</div></div><div style=\"font-size: 0.8em\"><div vhs_title=\"Inputs\" style=\"display: flex; font-size: 0.8em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">Inputs: <div vhs_title=\"images\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">images: The images to be turned into a video</div></div><div vhs_title=\"audio\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">audio: (optional) audio to add to the video</div></div><div vhs_title=\"meta_batch\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">meta_batch: (optional) Connect to a Meta Batch manager to divide extremely long image sequences into sub batches. See the documentation for Meta Batch Manager</div></div><div vhs_title=\"vae\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">vae: (optional) If provided, the node will take latents as input instead of images. This drastically reduces the required RAM (not VRAM) when working with long (100+ frames) sequences<div style=\"font-size: 1em\">Unlike on Load Video, this isn't always a strict upgrade over using a standalone VAE Decode.</div><div style=\"font-size: 1em\">If you have multiple Video Combine outputs, then the VAE decode will be performed for each output node increasing execution time</div><div style=\"font-size: 1em\">If you make any change to output settings on the Video Combine (such as changing the output format), the VAE decode will be performed again as the decoded result is (by design) not cached</div></div></div></div></div><div vhs_title=\"Widgets\" style=\"display: flex; font-size: 0.8em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">Widgets: <div vhs_title=\"frame_rate\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">frame_rate: The frame rate which will be used for the output video. Consider converting this to an input and connecting this to a Load Video with Video Info(Loaded)->fps. When including audio, failure to properly set this will result in audio desync</div></div><div vhs_title=\"loop_count\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">loop_count: The number of additional times the video should repeat. Can cause performance issues when used with long (100+ frames) sequences</div></div><div vhs_title=\"filename_prefix\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">filename_prefix: A prefix to add to the name of the output filename. This can include subfolders or format strings.</div></div><div vhs_title=\"format\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">format: The output format to use. Formats starting with, 'image' are saved with PIL, but formats starting with 'video' utilize the video_formats system. 'video' options require ffmpeg and selecting one frequently adds additional options to the node.</div></div><div vhs_title=\"pingpong\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">pingpong: Play the video normally, then repeat the video in reverse so that it 'pingpongs' back and forth. This is frequently used to minimize the appearance of skips on very short animations.</div></div><div vhs_title=\"save_output\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">save_output: Specifies if output files should be saved to the output folder, or the temporary output folder</div></div><div vhs_title=\"videopreview\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">videopreview: Displays a preview for the processed result. If advanced previews is enabled, the output is always converted to a format viewable from the browser. If the video has audio, it will also be previewed when moused over. Additional preview options can be accessed with right click.</div></div></div></div><div vhs_title=\"Common Format Widgets\" style=\"display: flex; font-size: 0.8em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">Common Format Widgets: <div vhs_title=\"crf\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">crf: Determines how much to prioritize quality over filesize. Numbers vary between formats, but on each format that includes it, the default value provides visually loss less output</div></div><div vhs_title=\"pix_fmt\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">pix_fmt: The pixel format to use for output. Alternative options will often have higher quality at the cost of increased file size and reduced compatibility with external software.<div style=\"font-size: 1em\"><div vhs_title=\"yuv420p\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">yuv420p: The most common and default format</div></div><div vhs_title=\"yuv420p10le\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">yuv420p10le: Use 10 bit color depth. This can improve color quality when combined with 16bit input color depth</div></div><div vhs_title=\"yuva420p\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">yuva420p: Include transparency in the output video</div></div></div></div></div><div vhs_title=\"input_color_depth\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">input_color_depth: VHS supports outputting 16bit images. While this produces higher quality output, the difference usually isn't visible without postprocessing and it significantly increases file size and processing time.</div></div><div vhs_title=\"save_metadata\" style=\"display: flex; font-size: 1em\" class=\"VHS_collapse\"><div style=\"color: #AAA; height: 1.5em;\">[<span style=\"font-family: monospace\">-</span>]</div><div style=\"width: 100%\">save_metadata: Determines if metadata for the workflow should be included in the output video file</div></div></div></div></div>",
+    "python_module": "custom_nodes.comfyui-workflow-encrypt",
+    "category": "Video Helper Suite 🎥🅥🅗🅢",
+    "output_node": true,
+    "has_intermediate_output": false,
+    "search_aliases": []
+  },
+  "PrimitiveString": {
+    "input": {
+      "required": {
+        "value": [
+          "STRING",
+          {
+            "multiline": false
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "value"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "STRING"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "STRING"
+    ],
+    "output_tooltips": [
+      null
+    ],
+    "output_matchtypes": null,
+    "name": "PrimitiveString",
+    "display_name": "Text",
+    "description": "",
+    "python_module": "comfy_extras.nodes_primitive",
+    "category": "utilities/primitive",
+    "output_node": false,
+    "deprecated": false,
+    "experimental": false,
+    "dev_only": false,
+    "api_node": false,
+    "price_badge": null,
+    "search_aliases": [
+      "text",
+      "string",
+      "text box",
+      "prompt"
+    ],
+    "essentials_category": null,
+    "has_intermediate_output": false
+  },
+  "LTXFloatToInt": {
+    "input": {
+      "required": {
+        "a": [
+          "FLOAT",
+          {
+            "default": 0.0
+          }
+        ]
+      }
+    },
+    "input_order": {
+      "required": [
+        "a"
+      ]
+    },
+    "is_input_list": false,
+    "output": [
+      "INT"
+    ],
+    "output_is_list": [
+      false
+    ],
+    "output_name": [
+      "INT"
+    ],
+    "name": "LTXFloatToInt",
+    "display_name": "🅛🅣🅧 Float To Int",
+    "description": "",
+    "python_module": "custom_nodes.comfyui-workflow-encrypt",
+    "category": "math/conversion",
+    "output_node": false,
+    "has_intermediate_output": false,
+    "search_aliases": []
+  }
+}
